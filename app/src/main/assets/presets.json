@@ -1,0 +1,493 @@
+{
+  "diefenbacher": {
+    "key": "diefenbacher",
+    "task_name": "1. Audzētājs",
+    "date_format": "%d/%m/%Y",
+    "columns": [
+      {
+        "index": 0,
+        "source_header": "Dat. 2026",
+        "role": "date",
+        "output_mapping": "Datums",
+        "data_type": "date",
+        "nullable": false,
+        "normalization_rule": "date_dd_mm",
+        "keywords": [
+          "dat",
+          "datums",
+          "date"
+        ]
+      },
+      {
+        "index": 1,
+        "source_header": "Operat.",
+        "role": "operator",
+        "output_mapping": null,
+        "data_type": "enum",
+        "enum_values": [
+          "VŠ",
+          "GR"
+        ],
+        "nullable": false,
+        "normalization_rule": "operator_whitelist_diefenbacher",
+        "keywords": [
+          "operat",
+          "oper"
+        ]
+      },
+      {
+        "index": 2,
+        "source_header": "Proj.Nr.",
+        "role": "project",
+        "output_mapping": "Related to",
+        "data_type": "string",
+        "nullable": false,
+        "normalization_rule": "project_code",
+        "keywords": [
+          "proj",
+          "projekta"
+        ]
+      },
+      {
+        "index": 3,
+        "source_header": "Apstrādes sākšanas laiks",
+        "role": "start_time",
+        "output_mapping": null,
+        "data_type": "string",
+        "nullable": true,
+        "normalization_rule": "time_hh_mm",
+        "keywords": [
+          "sākšan",
+          "saksa",
+          "start"
+        ]
+      },
+      {
+        "index": 4,
+        "source_header": "Biez.",
+        "role": "thickness",
+        "output_mapping": "m3 input",
+        "data_type": "float",
+        "nullable": true,
+        "normalization_rule": "numeric",
+        "keywords": [
+          "biez"
+        ]
+      },
+      {
+        "index": 5,
+        "source_header": "Plat.",
+        "role": "width",
+        "output_mapping": "m3 input",
+        "data_type": "float",
+        "nullable": true,
+        "normalization_rule": "numeric",
+        "keywords": [
+          "plat"
+        ]
+      },
+      {
+        "index": 6,
+        "source_header": "Ienākošie metri",
+        "role": "incoming_m",
+        "output_mapping": null,
+        "data_type": "float",
+        "nullable": true,
+        "normalization_rule": "numeric",
+        "keywords": [
+          "ienāk",
+          "ienakosie"
+        ]
+      },
+      {
+        "index": 7,
+        "source_header": "Izejošie metri",
+        "role": "outgoing_m",
+        "output_mapping": "m3 input",
+        "data_type": "float",
+        "nullable": true,
+        "normalization_rule": "numeric",
+        "keywords": [
+          "izej",
+          "izejosie"
+        ]
+      },
+      {
+        "index": 8,
+        "source_header": "gb.",
+        "role": "amount",
+        "output_mapping": "Kopā masteri",
+        "data_type": "int",
+        "nullable": true,
+        "normalization_rule": "numeric",
+        "keywords": [
+          "gb",
+          "skaits",
+          "amount"
+        ]
+      },
+      {
+        "index": 9,
+        "source_header": "Apstrādes beigšanas laiks",
+        "role": "end_time",
+        "output_mapping": null,
+        "data_type": "string",
+        "nullable": true,
+        "normalization_rule": "time_hh_mm",
+        "keywords": [
+          "beigšan",
+          "beigs",
+          "end"
+        ]
+      },
+      {
+        "index": 10,
+        "source_header": "Panelis",
+        "role": "panel",
+        "output_mapping": null,
+        "data_type": "enum",
+        "enum_values": [
+          "V/V",
+          "V/N",
+          "N/N"
+        ],
+        "nullable": true,
+        "normalization_rule": "panel_enum",
+        "keywords": [
+          "panel",
+          "panelis"
+        ]
+      },
+      {
+        "index": 11,
+        "source_header": "Slānis",
+        "role": "layer",
+        "output_mapping": null,
+        "data_type": "string",
+        "nullable": true,
+        "normalization_rule": "layer_code",
+        "keywords": [
+          "slān",
+          "slanis"
+        ]
+      },
+      {
+        "index": 12,
+        "source_header": "Dīkstāve un komentāri",
+        "role": "comments",
+        "output_mapping": null,
+        "data_type": "string",
+        "nullable": true,
+        "normalization_rule": "passthrough",
+        "keywords": [
+          "dīkst",
+          "koment",
+          "comment"
+        ]
+      }
+    ]
+  },
+  "vacuumpress": {
+    "key": "vacuumpress",
+    "task_name": "3. Vakuumprese",
+    "date_format": "%d/%m/%Y",
+    "columns": [
+      {
+        "index": 0,
+        "source_header": "Dat. 2026",
+        "role": "date",
+        "output_mapping": "Datums",
+        "data_type": "date",
+        "nullable": false,
+        "normalization_rule": "date_dd_mm",
+        "keywords": [
+          "dat",
+          "datums"
+        ]
+      },
+      {
+        "index": 1,
+        "source_header": "Operat.",
+        "role": "operator",
+        "output_mapping": null,
+        "data_type": "string",
+        "nullable": false,
+        "normalization_rule": "operator",
+        "keywords": [
+          "operat",
+          "oper"
+        ]
+      },
+      {
+        "index": 2,
+        "source_header": "Mastera nr.",
+        "role": "master",
+        "output_mapping": "Kopā masteri",
+        "data_type": "string",
+        "nullable": true,
+        "normalization_rule": "passthrough",
+        "keywords": [
+          "mastera",
+          "master"
+        ]
+      },
+      {
+        "index": 3,
+        "source_header": "Proj. Nr.",
+        "role": "project",
+        "output_mapping": "Related to",
+        "data_type": "string",
+        "nullable": false,
+        "normalization_rule": "project_code",
+        "keywords": [
+          "proj",
+          "projekta"
+        ]
+      },
+      {
+        "index": 4,
+        "source_header": "Apstrādes uzsākšanas laiks",
+        "role": "start_time",
+        "output_mapping": null,
+        "data_type": "string",
+        "nullable": true,
+        "normalization_rule": "time_hh_mm",
+        "keywords": [
+          "uzsāk",
+          "saksa",
+          "start"
+        ]
+      },
+      {
+        "index": 5,
+        "source_header": "Slāņu skaits/biezumi",
+        "role": "layers",
+        "output_mapping": null,
+        "data_type": "string",
+        "nullable": true,
+        "normalization_rule": "passthrough",
+        "keywords": [
+          "slāņ",
+          "slanu",
+          "biezum"
+        ]
+      },
+      {
+        "index": 6,
+        "source_header": "Garenvirziena dēļi - platums",
+        "role": "long_width",
+        "output_mapping": null,
+        "data_type": "float",
+        "nullable": true,
+        "normalization_rule": "numeric",
+        "keywords": [
+          "garen",
+          "garenv",
+          "long"
+        ]
+      },
+      {
+        "index": 7,
+        "source_header": "Garenvirziena dēļi - skaits",
+        "role": "long_count",
+        "output_mapping": null,
+        "data_type": "float",
+        "nullable": true,
+        "normalization_rule": "numeric",
+        "keywords": [
+          "garen",
+          "garenv",
+          "skaits"
+        ]
+      },
+      {
+        "index": 8,
+        "source_header": "Šķērsvirziena dēļi - platums",
+        "role": "cross_width",
+        "output_mapping": null,
+        "data_type": "float",
+        "nullable": true,
+        "normalization_rule": "numeric",
+        "keywords": [
+          "šķērs",
+          "skers",
+          "cross",
+          "trans"
+        ]
+      },
+      {
+        "index": 9,
+        "source_header": "Šķērsvirziena dēļi - skaits",
+        "role": "cross_count",
+        "output_mapping": null,
+        "data_type": "float",
+        "nullable": true,
+        "normalization_rule": "numeric",
+        "keywords": [
+          "šķērs",
+          "skers",
+          "skaits"
+        ]
+      },
+      {
+        "index": 10,
+        "source_header": "Apstrādes pabeigšanas laiks",
+        "role": "end_time",
+        "output_mapping": null,
+        "data_type": "string",
+        "nullable": true,
+        "normalization_rule": "time_hh_mm",
+        "keywords": [
+          "pabeig",
+          "beigs",
+          "end"
+        ]
+      },
+      {
+        "index": 11,
+        "source_header": "Dīkstāve un komentāri",
+        "role": "comments",
+        "output_mapping": null,
+        "data_type": "string",
+        "nullable": true,
+        "normalization_rule": "passthrough",
+        "keywords": [
+          "dīkst",
+          "koment",
+          "comment"
+        ]
+      }
+    ]
+  },
+  "cnc": {
+    "key": "cnc",
+    "task_name": "5. CNC",
+    "date_format": "%d.%m.%Y",
+    "columns": [
+      {
+        "index": 0,
+        "source_header": "Dat. 2026",
+        "role": "date",
+        "output_mapping": "Datums",
+        "data_type": "date",
+        "enum_values": [],
+        "nullable": false,
+        "normalization_rule": "date_dd_mm",
+        "keywords": ["dat", "datums"]
+      },
+      {
+        "index": 1,
+        "source_header": "Operat.",
+        "role": "operator",
+        "output_mapping": null,
+        "data_type": "string",
+        "enum_values": [],
+        "nullable": false,
+        "normalization_rule": "operator",
+        "keywords": ["operat", "oper"]
+      },
+      {
+        "index": 2,
+        "source_header": "Projekta Nr.",
+        "role": "project",
+        "output_mapping": "Related to",
+        "data_type": "string",
+        "enum_values": [],
+        "nullable": false,
+        "normalization_rule": "project_code",
+        "keywords": ["proj", "projekta"]
+      },
+      {
+        "index": 3,
+        "source_header": "Mastera. nr.",
+        "role": "master",
+        "output_mapping": "Kopā masteri",
+        "data_type": "int",
+        "enum_values": [],
+        "nullable": true,
+        "normalization_rule": "cnc_master_numeric",
+        "keywords": ["master"]
+      },
+      {
+        "index": 4,
+        "source_header": "Uzkraušana Sākta",
+        "role": "load_start",
+        "output_mapping": null,
+        "data_type": "string",
+        "enum_values": [],
+        "nullable": true,
+        "normalization_rule": "time_hh_mm",
+        "keywords": ["uzkrausana", "sakta"]
+      },
+      {
+        "index": 5,
+        "source_header": "CNC sāk",
+        "role": "cnc_start",
+        "output_mapping": null,
+        "data_type": "string",
+        "enum_values": [],
+        "nullable": true,
+        "normalization_rule": "time_hh_mm",
+        "keywords": ["cnc", "sak"]
+      },
+      {
+        "index": 6,
+        "source_header": "CNC beidz",
+        "role": "cnc_end",
+        "output_mapping": null,
+        "data_type": "string",
+        "enum_values": [],
+        "nullable": true,
+        "normalization_rule": "time_hh_mm",
+        "keywords": ["cnc", "beidz"]
+      },
+      {
+        "index": 7,
+        "source_header": "Nokraušana pabeigta",
+        "role": "unload_end",
+        "output_mapping": null,
+        "data_type": "string",
+        "enum_values": [],
+        "nullable": true,
+        "normalization_rule": "time_hh_mm",
+        "keywords": ["nokrausana"]
+      },
+      {
+        "index": 8,
+        "source_header": "Simulācijas laiks",
+        "role": "sim_duration",
+        "output_mapping": null,
+        "data_type": "string",
+        "enum_values": [],
+        "nullable": true,
+        "normalization_rule": "passthrough",
+        "keywords": ["simulacija"]
+      },
+      {
+        "index": 9,
+        "source_header": "Divpusēja apstrāde (jā/nē)",
+        "role": "double_sided",
+        "output_mapping": null,
+        "data_type": "enum",
+        "enum_values": [
+          "jā",
+          "nē"
+        ],
+        "nullable": true,
+        "normalization_rule": "passthrough",
+        "keywords": ["divpuseja"]
+      },
+      {
+        "index": 10,
+        "source_header": "Dīkstāve un komentāri",
+        "role": "comments",
+        "output_mapping": null,
+        "data_type": "string",
+        "enum_values": [],
+        "nullable": true,
+        "normalization_rule": "passthrough",
+        "keywords": ["komentari"]
+      }
+    ]
+  }
+}

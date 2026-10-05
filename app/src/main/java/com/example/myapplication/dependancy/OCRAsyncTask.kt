@@ -1,7 +1,5 @@
 package com.example.myapplication.dependancy
 
-import android.app.Activity
-import android.app.ProgressDialog
 import android.os.AsyncTask
 import android.util.Log
 import org.json.JSONObject
@@ -11,120 +9,106 @@ import java.io.InputStreamReader
 import java.net.URL
 import java.net.URLEncoder
 import javax.net.ssl.HttpsURLConnection
-//import com.example.myapplication.dependancy.IORCCallBack
 
 /**
- * Created by suhasbachewar on 10/5/16.
+ * Async Task to invoke OCR.space API endpoint and parse tabular document data.
+ * Reference: https://ocr.space/ocrapi#java
  */
 class OCRAsyncTask(
-    private val mActivity: Activity?,
     private val mApiKey: String?,
-    isOverlayRequired: Boolean,
-    imageUrl: String?,
-    language: String?,
-    iOCRCallBack: IOCRCallBack
-) : AsyncTask<Any?, Any?, Any?>() {
-    var url: String = "https://api.ocr.space/parse/image" // OCR API Endpoints
-
-    private var isOverlayRequired = false
-    private val mImageUrl: String?
-    private val mLanguage: String?
-    private var mProgressDialog: ProgressDialog? = null
+    private val isOverlayRequired: Boolean,
+    private val mImageDataOrUrl: String?,
+    private val mLanguage: String?,
     private val mIOCRCallBack: IOCRCallBack
+) : AsyncTask<Any?, Any?, String?>() {
 
-    init {
-        this.isOverlayRequired = isOverlayRequired
-        this.mImageUrl = imageUrl
-        this.mLanguage = language
-        this.mIOCRCallBack = iOCRCallBack
-    }
+    private val apiUrl: String = "https://api.ocr.space/parse/image"
 
-    override fun onPreExecute()
-    {
-        mProgressDialog = ProgressDialog(mActivity)
-        mProgressDialog!!.setTitle("Wait while processing....")
-        mProgressDialog!!.setCanceledOnTouchOutside(false)
-        mProgressDialog!!.setCancelable(false)
-        mProgressDialog!!.show()
-        super.onPreExecute()
-    }
-
-    override fun doInBackground(params: Array<Any?>?): String?
-    {
-        try
-        {
-            return sendPost(mApiKey, isOverlayRequired, mImageUrl, mLanguage)
+    override fun doInBackground(params: Array<Any?>?): String? {
+        try {
+            return sendPost(
+                apiKey = if (!mApiKey.isNullOrBlank()) mApiKey else com.example.myapplication.BuildConfig.OCR_API_KEY,
+                isOverlayRequired = isOverlayRequired,
+                imageDataOrUrl = mImageDataOrUrl,
+                language = if (!mLanguage.isNullOrBlank()) mLanguage else "eng"
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "OCR Request failed", e)
+            return JSONObject().apply {
+                put("IsErroredOnProcessing", true)
+                put("ErrorMessage", listOf("Network or parsing error: ${e.localizedMessage}"))
+            }.toString()
         }
-        catch (e: Exception)
-        {
-            e.printStackTrace()
-        }
-
-        return null
     }
 
     @Throws(Exception::class)
     private fun sendPost(
-        apiKey: String?,
+        apiKey: String,
         isOverlayRequired: Boolean,
-        imageUrl: String?,
-        language: String?
-    ): String? {
-        val obj = URL(url) // OCR API Endpoints
-        val con = obj.openConnection() as HttpsURLConnection
+        imageDataOrUrl: String?,
+        language: String
+    ): String {
+        val urlObj = URL(apiUrl)
+        val con = urlObj.openConnection() as HttpsURLConnection
 
-        //add request header
-        con.setRequestMethod("POST")
+        con.requestMethod = "POST"
         con.setRequestProperty("User-Agent", "Mozilla/5.0")
         con.setRequestProperty("Accept-Language", "en-US,en;q=0.5")
 
         val postDataParams = JSONObject()
-
-        postDataParams.put("apikey", "K89893470788957") //TODO Add your Registered API key
+        postDataParams.put("apikey", apiKey)
         postDataParams.put("isOverlayRequired", isOverlayRequired)
-        postDataParams.put("url", imageUrl)
         postDataParams.put("language", language)
+        
+        // Critical parameters for table reading
+        postDataParams.put("isTable", true)
+        postDataParams.put("OCREngine", "2")
+        postDataParams.put("scale", true)
 
-        // Send post request
-        con.setDoOutput(true)
-        val wr = DataOutputStream(con.getOutputStream())
+        if (!imageDataOrUrl.isNullOrBlank()) {
+            if (imageDataOrUrl.startsWith("http://") || imageDataOrUrl.startsWith("https://")) {
+                postDataParams.put("url", imageDataOrUrl)
+            } else if (imageDataOrUrl.startsWith("data:")) {
+                postDataParams.put("base64Image", imageDataOrUrl)
+            } else {
+                // Treat as base64 string
+                postDataParams.put("base64Image", "data:image/jpeg;base64,$imageDataOrUrl")
+            }
+        }
+
+        con.doOutput = true
+        val wr = DataOutputStream(con.outputStream)
         wr.writeBytes(getPostDataString(postDataParams))
         wr.flush()
         wr.close()
 
-        val `in` = BufferedReader(InputStreamReader(con.getInputStream()))
+        val responseCode = con.responseCode
+        val inputStream = if (responseCode in 200..299) con.inputStream else con.errorStream
+        val reader = BufferedReader(InputStreamReader(inputStream))
+        val response = StringBuilder()
         var inputLine: String?
-        val response = StringBuffer()
 
-        while((`in`.readLine().also { inputLine = it }) != null)
-        {
+        while (reader.readLine().also { inputLine = it } != null) {
             response.append(inputLine)
         }
-        `in`.close()
+        reader.close()
 
-        //return result
         return response.toString()
     }
 
-    override fun onPostExecute(result: Any?)
-    {
+    override fun onPostExecute(result: String?) {
         super.onPostExecute(result)
-        if (mProgressDialog != null && mProgressDialog!!.isShowing) mProgressDialog!!.dismiss()
-        val response = result as String
-        mIOCRCallBack.getOCRCallBackResult(response)
-        Log.d(TAG, response.toString())
+        Log.d(TAG, "OCR API Result: $result")
+        mIOCRCallBack.getOCRCallBackResult(result)
     }
 
     @Throws(Exception::class)
-    fun getPostDataString(params: JSONObject): String
-    {
+    private fun getPostDataString(params: JSONObject): String {
         val result = StringBuilder()
         var first = true
 
         val itr = params.keys()
-
-        while (itr.hasNext())
-        {
+        while (itr.hasNext()) {
             val key = itr.next()
             val value = params.get(key)
 
@@ -138,8 +122,7 @@ class OCRAsyncTask(
         return result.toString()
     }
 
-    companion object
-    {
-        private val TAG: String = OCRAsyncTask::class.java.getName()
+    companion object {
+        private const val TAG: String = "OCRAsyncTask"
     }
 }

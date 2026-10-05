@@ -1,6 +1,31 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+}
+
+fun getOcrApiKey(): String {
+    val sysEnv = System.getenv("OCR_API_KEY")
+    if (!sysEnv.isNullOrBlank()) return sysEnv
+
+    val envFile = rootProject.file(".env")
+    if (envFile.exists()) {
+        val props = Properties()
+        envFile.inputStream().use { props.load(it) }
+        val key = props.getProperty("OCR_API_KEY")
+        if (!key.isNullOrBlank()) return key
+    }
+
+    val localPropsFile = rootProject.file("local.properties")
+    if (localPropsFile.exists()) {
+        val props = Properties()
+        localPropsFile.inputStream().use { props.load(it) }
+        val key = props.getProperty("OCR_API_KEY")
+        if (!key.isNullOrBlank()) return key
+    }
+
+    return "K89893470788957"
 }
 
 android {
@@ -17,6 +42,8 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "OCR_API_KEY", "\"${getOcrApiKey()}\"")
     }
 
     buildTypes {
@@ -32,6 +59,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

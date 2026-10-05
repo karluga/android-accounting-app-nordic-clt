@@ -9,6 +9,11 @@ app/build/
 *.iws
 local.properties
 
+# Environment variables
+.env
+.env.*
+!.env.example
+
 # Compiled class file
 *.class
 
