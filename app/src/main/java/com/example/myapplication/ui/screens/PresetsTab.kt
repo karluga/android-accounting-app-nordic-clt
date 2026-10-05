@@ -18,7 +18,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myapplication.models.PresetColumn
@@ -94,7 +93,7 @@ fun PresetsTab(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Definē skenējamo dokumentu kolonnu virsrakstus, datu tipus un validācijas noteikumus.",
+                        text = "Definē skenējamo dokumentu kolonnu virsrakstus, datu tipus un krāsu uzsvaru grupas (1: Import, 2: Aprēķini, 3: Sekundārs).",
                         fontSize = 14.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -169,7 +168,8 @@ fun PresetsTab(
                                         role = "date",
                                         outputMapping = "Datums",
                                         dataType = "date",
-                                        nullable = false
+                                        nullable = false,
+                                        group = 1
                                     )
                                 )
                                 statusMessage = "Izveidota jauna preseta veidne. Aizpildi un saglabā!"
@@ -269,7 +269,8 @@ fun PresetsTab(
                                         index = nextIdx,
                                         sourceHeader = "Kolonna ${nextIdx + 1}",
                                         role = "passthrough",
-                                        dataType = "string"
+                                        dataType = "string",
+                                        group = 3
                                     )
                                 )
                             },
@@ -300,6 +301,7 @@ fun PresetsTab(
                                 PresetHeaderCell("Skenētais virsraksts", 160)
                                 PresetHeaderCell("Loma (Role)", 120)
                                 PresetHeaderCell("Izvades lauks (Mapping)", 140)
+                                PresetHeaderCell("Grupa (1:Imp, 2:Apr, 3:Sek)", 130)
                                 PresetHeaderCell("Datu tips", 100)
                                 PresetHeaderCell("Obligāts", 70)
                                 PresetHeaderCell("Atslēgvārdi (Keywords)", 180)
@@ -322,6 +324,7 @@ fun PresetsTab(
                                     var srcHeader by remember(index, col) { mutableStateOf(col.sourceHeader) }
                                     var role by remember(index, col) { mutableStateOf(col.role) }
                                     var outMap by remember(index, col) { mutableStateOf(col.outputMapping ?: "") }
+                                    var groupVal by remember(index, col) { mutableIntStateOf(col.group) }
                                     var dataType by remember(index, col) { mutableStateOf(col.dataType) }
                                     var isNullable by remember(index, col) { mutableStateOf(col.nullable) }
                                     var keywordsText by remember(index, col) { mutableStateOf(col.keywords.joinToString(", ")) }
@@ -358,6 +361,13 @@ fun PresetsTab(
                                         PresetInputCell(outMap, 140, "Datums, Related to") {
                                             outMap = it
                                             columnsState[index] = columnsState[index].copy(outputMapping = if (it.isBlank()) null else it)
+                                        }
+
+                                        // Group (1: Import, 2: Calculations, 3: Secondary)
+                                        PresetInputCell(groupVal.toString(), 130, "1, 2 vai 3") {
+                                            val parsedGroup = it.toIntOrNull() ?: 3
+                                            groupVal = parsedGroup.coerceIn(1, 3)
+                                            columnsState[index] = columnsState[index].copy(group = groupVal)
                                         }
 
                                         // Data Type

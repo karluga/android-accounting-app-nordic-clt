@@ -12,7 +12,8 @@ data class PresetColumn(
     val nullable: Boolean = true,
     val normalizationRule: String? = null,
     val keywords: List<String> = emptyList(),
-    val enumValues: List<String> = emptyList()
+    val enumValues: List<String> = emptyList(),
+    val group: Int = 3 // 1 = Import (Pink), 2 = Calculations (Lilac), 3 = Secondary (Dark)
 ) {
     fun toJsonObject(): JSONObject {
         val json = JSONObject()
@@ -23,6 +24,7 @@ data class PresetColumn(
         json.put("data_type", dataType)
         json.put("nullable", nullable)
         json.put("normalization_rule", normalizationRule ?: JSONObject.NULL)
+        json.put("group", group)
 
         val kwArr = JSONArray()
         keywords.forEach { kwArr.put(it) }
@@ -55,6 +57,9 @@ data class PresetColumn(
 
             val outputMappingRaw = if (json.isNull("output_mapping")) null else json.optString("output_mapping")
 
+            // Infer group if not explicitly provided
+            val defaultGroup = inferColumnGroup(json.optString("source_header", ""), json.optString("role", ""))
+
             return PresetColumn(
                 index = json.optInt("index", 0),
                 sourceHeader = json.optString("source_header", ""),
@@ -64,8 +69,28 @@ data class PresetColumn(
                 nullable = json.optBoolean("nullable", true),
                 normalizationRule = if (json.isNull("normalization_rule")) null else json.optString("normalization_rule"),
                 keywords = kwList,
-                enumValues = enumList
+                enumValues = enumList,
+                group = json.optInt("group", defaultGroup)
             )
+        }
+
+        private fun inferColumnGroup(header: String, role: String): Int {
+            val hLower = header.lowercase()
+            val rLower = role.lowercase()
+
+            return when {
+                // Group 1: Import fields (Datums, Operator, Project)
+                rLower.contains("date") || rLower.contains("operator") || rLower.contains("project") ||
+                        hLower.contains("dat") || hLower.contains("oper") || hLower.contains("proj") -> 1
+
+                // Group 2: Calculations fields (m3, thickness, width, meters, count, comments/master)
+                rLower.contains("thickness") || rLower.contains("width") || rLower.contains("outgoing") ||
+                        rLower.contains("amount") || rLower.contains("master") || rLower.contains("comments") ||
+                        hLower.contains("biez") || hLower.contains("plat") || hLower.contains("izēj") ||
+                        hLower.contains("gb") || hLower.contains("dīkstāve") || hLower.contains("master") -> 2
+
+                else -> 3
+            }
         }
 
         private fun String?.isNullFrancoOrBlank(): Boolean {

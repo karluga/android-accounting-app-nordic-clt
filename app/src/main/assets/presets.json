@@ -12,11 +12,8 @@
         "data_type": "date",
         "nullable": false,
         "normalization_rule": "date_dd_mm",
-        "keywords": [
-          "dat",
-          "datums",
-          "date"
-        ]
+        "group": 1,
+        "keywords": ["dat", "datums", "date"]
       },
       {
         "index": 1,
@@ -24,16 +21,11 @@
         "role": "operator",
         "output_mapping": null,
         "data_type": "enum",
-        "enum_values": [
-          "VŠ",
-          "GR"
-        ],
+        "enum_values": ["VŠ", "GR"],
         "nullable": false,
         "normalization_rule": "operator_whitelist_diefenbacher",
-        "keywords": [
-          "operat",
-          "oper"
-        ]
+        "group": 1,
+        "keywords": ["operat", "oper"]
       },
       {
         "index": 2,
@@ -43,10 +35,8 @@
         "data_type": "string",
         "nullable": false,
         "normalization_rule": "project_code",
-        "keywords": [
-          "proj",
-          "projekta"
-        ]
+        "group": 1,
+        "keywords": ["proj", "projekta"]
       },
       {
         "index": 3,
@@ -56,11 +46,8 @@
         "data_type": "string",
         "nullable": true,
         "normalization_rule": "time_hh_mm",
-        "keywords": [
-          "sākšan",
-          "saksa",
-          "start"
-        ]
+        "group": 3,
+        "keywords": ["sākšan", "saksa", "start"]
       },
       {
         "index": 4,
@@ -70,9 +57,8 @@
         "data_type": "float",
         "nullable": true,
         "normalization_rule": "numeric",
-        "keywords": [
-          "biez"
-        ]
+        "group": 2,
+        "keywords": ["biez"]
       },
       {
         "index": 5,
@@ -82,9 +68,8 @@
         "data_type": "float",
         "nullable": true,
         "normalization_rule": "numeric",
-        "keywords": [
-          "plat"
-        ]
+        "group": 2,
+        "keywords": ["plat"]
       },
       {
         "index": 6,
@@ -94,10 +79,8 @@
         "data_type": "float",
         "nullable": true,
         "normalization_rule": "numeric",
-        "keywords": [
-          "ienāk",
-          "ienakosie"
-        ]
+        "group": 3,
+        "keywords": ["ienāk", "ienakosie"]
       },
       {
         "index": 7,
@@ -107,10 +90,8 @@
         "data_type": "float",
         "nullable": true,
         "normalization_rule": "numeric",
-        "keywords": [
-          "izej",
-          "izejosie"
-        ]
+        "group": 2,
+        "keywords": ["izej", "izejosie"]
       },
       {
         "index": 8,
@@ -120,11 +101,8 @@
         "data_type": "int",
         "nullable": true,
         "normalization_rule": "numeric",
-        "keywords": [
-          "gb",
-          "skaits",
-          "amount"
-        ]
+        "group": 2,
+        "keywords": ["gb", "skaits", "amount"]
       },
       {
         "index": 9,
@@ -134,11 +112,8 @@
         "data_type": "string",
         "nullable": true,
         "normalization_rule": "time_hh_mm",
-        "keywords": [
-          "beigšan",
-          "beigs",
-          "end"
-        ]
+        "group": 3,
+        "keywords": ["beigšan", "beigs", "end"]
       },
       {
         "index": 10,
@@ -146,17 +121,11 @@
         "role": "panel",
         "output_mapping": null,
         "data_type": "enum",
-        "enum_values": [
-          "V/V",
-          "V/N",
-          "N/N"
-        ],
+        "enum_values": ["V/V", "V/N", "N/N"],
         "nullable": true,
         "normalization_rule": "panel_enum",
-        "keywords": [
-          "panel",
-          "panelis"
-        ]
+        "group": 3,
+        "keywords": ["panel", "panelis"]
       },
       {
         "index": 11,
@@ -166,10 +135,8 @@
         "data_type": "string",
         "nullable": true,
         "normalization_rule": "layer_code",
-        "keywords": [
-          "slān",
-          "slanis"
-        ]
+        "group": 3,
+        "keywords": ["slān", "slanis"]
       },
       {
         "index": 12,
@@ -179,11 +146,8 @@
         "data_type": "string",
         "nullable": true,
         "normalization_rule": "passthrough",
-        "keywords": [
-          "dīkst",
-          "koment",
-          "comment"
-        ]
+        "group": 2,
+        "keywords": ["dīkst", "koment", "comment"]
       }
     ]
   },
@@ -200,10 +164,8 @@
         "data_type": "date",
         "nullable": false,
         "normalization_rule": "date_dd_mm",
-        "keywords": [
-          "dat",
-          "datums"
-        ]
+        "group": 1,
+        "keywords": ["dat", "datums"]
       },
       {
         "index": 1,
@@ -213,10 +175,8 @@
         "data_type": "string",
         "nullable": false,
         "normalization_rule": "operator",
-        "keywords": [
-          "operat",
-          "oper"
-        ]
+        "group": 1,
+        "keywords": ["operat", "oper"]
       },
       {
         "index": 2,
@@ -226,10 +186,8 @@
         "data_type": "string",
         "nullable": true,
         "normalization_rule": "passthrough",
-        "keywords": [
-          "mastera",
-          "master"
-        ]
+        "group": 2,
+        "keywords": ["mastera", "master"]
       },
       {
         "index": 3,
@@ -239,10 +197,8 @@
         "data_type": "string",
         "nullable": false,
         "normalization_rule": "project_code",
-        "keywords": [
-          "proj",
-          "projekta"
-        ]
+        "group": 1,
+        "keywords": ["proj", "projekta"]
       },
       {
         "index": 4,
@@ -252,11 +208,8 @@
         "data_type": "string",
         "nullable": true,
         "normalization_rule": "time_hh_mm",
-        "keywords": [
-          "uzsāk",
-          "saksa",
-          "start"
-        ]
+        "group": 3,
+        "keywords": ["uzsāk", "saksa", "start"]
       },
       {
         "index": 5,
@@ -266,11 +219,8 @@
         "data_type": "string",
         "nullable": true,
         "normalization_rule": "passthrough",
-        "keywords": [
-          "slāņ",
-          "slanu",
-          "biezum"
-        ]
+        "group": 2,
+        "keywords": ["slāņ", "slanu", "biezum"]
       },
       {
         "index": 6,
@@ -280,11 +230,8 @@
         "data_type": "float",
         "nullable": true,
         "normalization_rule": "numeric",
-        "keywords": [
-          "garen",
-          "garenv",
-          "long"
-        ]
+        "group": 2,
+        "keywords": ["garen", "garenv", "long"]
       },
       {
         "index": 7,
@@ -294,11 +241,8 @@
         "data_type": "float",
         "nullable": true,
         "normalization_rule": "numeric",
-        "keywords": [
-          "garen",
-          "garenv",
-          "skaits"
-        ]
+        "group": 2,
+        "keywords": ["garen", "garenv", "skaits"]
       },
       {
         "index": 8,
@@ -308,12 +252,8 @@
         "data_type": "float",
         "nullable": true,
         "normalization_rule": "numeric",
-        "keywords": [
-          "šķērs",
-          "skers",
-          "cross",
-          "trans"
-        ]
+        "group": 2,
+        "keywords": ["šķērs", "skers", "cross", "trans"]
       },
       {
         "index": 9,
@@ -323,11 +263,8 @@
         "data_type": "float",
         "nullable": true,
         "normalization_rule": "numeric",
-        "keywords": [
-          "šķērs",
-          "skers",
-          "skaits"
-        ]
+        "group": 2,
+        "keywords": ["šķērs", "skers", "skaits"]
       },
       {
         "index": 10,
@@ -337,11 +274,8 @@
         "data_type": "string",
         "nullable": true,
         "normalization_rule": "time_hh_mm",
-        "keywords": [
-          "pabeig",
-          "beigs",
-          "end"
-        ]
+        "group": 3,
+        "keywords": ["pabeig", "beigs", "end"]
       },
       {
         "index": 11,
@@ -351,11 +285,8 @@
         "data_type": "string",
         "nullable": true,
         "normalization_rule": "passthrough",
-        "keywords": [
-          "dīkst",
-          "koment",
-          "comment"
-        ]
+        "group": 3,
+        "keywords": ["dīkst", "koment", "comment"]
       }
     ]
   },
@@ -373,6 +304,7 @@
         "enum_values": [],
         "nullable": false,
         "normalization_rule": "date_dd_mm",
+        "group": 1,
         "keywords": ["dat", "datums"]
       },
       {
@@ -384,6 +316,7 @@
         "enum_values": [],
         "nullable": false,
         "normalization_rule": "operator",
+        "group": 1,
         "keywords": ["operat", "oper"]
       },
       {
@@ -395,6 +328,7 @@
         "enum_values": [],
         "nullable": false,
         "normalization_rule": "project_code",
+        "group": 1,
         "keywords": ["proj", "projekta"]
       },
       {
@@ -406,6 +340,7 @@
         "enum_values": [],
         "nullable": true,
         "normalization_rule": "cnc_master_numeric",
+        "group": 2,
         "keywords": ["master"]
       },
       {
@@ -417,6 +352,7 @@
         "enum_values": [],
         "nullable": true,
         "normalization_rule": "time_hh_mm",
+        "group": 3,
         "keywords": ["uzkrausana", "sakta"]
       },
       {
@@ -428,6 +364,7 @@
         "enum_values": [],
         "nullable": true,
         "normalization_rule": "time_hh_mm",
+        "group": 2,
         "keywords": ["cnc", "sak"]
       },
       {
@@ -439,6 +376,7 @@
         "enum_values": [],
         "nullable": true,
         "normalization_rule": "time_hh_mm",
+        "group": 2,
         "keywords": ["cnc", "beidz"]
       },
       {
@@ -450,6 +388,7 @@
         "enum_values": [],
         "nullable": true,
         "normalization_rule": "time_hh_mm",
+        "group": 3,
         "keywords": ["nokrausana"]
       },
       {
@@ -461,6 +400,7 @@
         "enum_values": [],
         "nullable": true,
         "normalization_rule": "passthrough",
+        "group": 3,
         "keywords": ["simulacija"]
       },
       {
@@ -469,12 +409,10 @@
         "role": "double_sided",
         "output_mapping": null,
         "data_type": "enum",
-        "enum_values": [
-          "jā",
-          "nē"
-        ],
+        "enum_values": ["jā", "nē"],
         "nullable": true,
         "normalization_rule": "passthrough",
+        "group": 2,
         "keywords": ["divpuseja"]
       },
       {
@@ -486,6 +424,7 @@
         "enum_values": [],
         "nullable": true,
         "normalization_rule": "passthrough",
+        "group": 3,
         "keywords": ["komentari"]
       }
     ]
