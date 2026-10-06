@@ -32,7 +32,7 @@ make sure OCR doesnt keep empty rows
   * **6 digits (DDMMYY):** e.g., `280826` → converts to `28/08/2026`.
   * **8 digits (DDMMYYYY):** e.g., `28082026` → converts to `28/08/2026`.
   * **Standard separators (DD.MM, DD/MM, DD-MM):** e.g., `28.08`, `28/08` → converts to `28/08/2026`.
-  * **Date forward-filling:** Blank date cells in a page automatically inherit the active date from the last filled row on that same page.
+  * **Date forward-filling:** Blank date cells in a page automatically inherit the active date from the last filled row on that same page. (with this same logic, when editing a date cell, all dates below change along with this cell)
 
 ---
 
@@ -57,7 +57,8 @@ ABA; RGO; RVE
 
 Diefenbacher operatori
 VŠ/VŠĻ; GPU;
-**all of these are defined by the user, but these ones are already added**
+**all of these are defined by the user in PresetsTab, but these ones are already added**
+**just like the date, machine operators are also passed down from the last filled cell, and editing them does the same**
 ---
 
 ## 6. Project Code Normalization (`Proj. Nr.`)

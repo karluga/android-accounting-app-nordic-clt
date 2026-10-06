@@ -189,6 +189,10 @@ object ImportProcessor {
                 }
             }
 
+            if (addedCount > 0) {
+                DataNormalizer.normalizeRows(rawRowsList, activePreset)
+            }
+
             return if (addedCount > 0) {
                 "OCR.space sekmīgi nolasīja $addedCount rindas [$rotationInfo]!\nDati ielādēti atsevišķās kolonnu šūnās. Lūdzu, pārbaudiet pirms ģenerēšanas.$jsonDebugInfo"
             } else {

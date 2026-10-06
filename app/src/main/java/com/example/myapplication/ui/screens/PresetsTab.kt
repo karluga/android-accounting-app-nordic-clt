@@ -37,6 +37,7 @@ fun PresetsTab(
     var keyInput by remember { mutableStateOf("") }
     var taskNameInput by remember { mutableStateOf("") }
     var dateFormatInput by remember { mutableStateOf("%d/%m/%Y") }
+    var maxOutgoingRatioInput by remember { mutableStateOf("13.0") }
     val columnsState = remember { mutableStateListOf<PresetColumn>() }
 
     var statusMessage by remember { mutableStateOf("") }
@@ -50,6 +51,7 @@ fun PresetsTab(
             keyInput = preset.key
             taskNameInput = preset.taskName
             dateFormatInput = preset.dateFormat
+            maxOutgoingRatioInput = preset.maxOutgoingRatio.toString()
             columnsState.clear()
             columnsState.addAll(preset.columns)
             statusMessage = "Ielādēts presets '${preset.taskName}'"
@@ -160,6 +162,7 @@ fun PresetsTab(
                                 keyInput = "jauns_solis"
                                 taskNameInput = "Jauns ražošanas solis"
                                 dateFormatInput = "%d/%m/%Y"
+                                maxOutgoingRatioInput = "13.0"
                                 columnsState.clear()
                                 columnsState.add(
                                     PresetColumn(
@@ -235,6 +238,17 @@ fun PresetsTab(
                         onValueChange = { dateFormatInput = it },
                         label = { Text("Datuma formāts") },
                         placeholder = { Text("%d/%m/%Y vai %d.%m.%Y") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    OutlinedTextField(
+                        value = maxOutgoingRatioInput,
+                        onValueChange = { maxOutgoingRatioInput = it },
+                        label = { Text("Max Izejošie/gb. attiecība (Diefenbacher rule 9)") },
+                        placeholder = { Text("13.0") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
@@ -461,10 +475,12 @@ fun PresetsTab(
                                     return@Button
                                 }
 
+                                val maxRatio = maxOutgoingRatioInput.toDoubleOrNull() ?: 13.0
                                 val updatedPreset = TablePreset(
                                     key = keyInput,
                                     taskName = taskNameInput,
                                     dateFormat = dateFormatInput,
+                                    maxOutgoingRatio = maxRatio,
                                     columns = columnsState.toList()
                                 )
 

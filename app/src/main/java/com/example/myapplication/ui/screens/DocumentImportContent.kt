@@ -37,6 +37,7 @@ import com.example.myapplication.dependancy.IOCRCallBack
 import com.example.myapplication.dependancy.OCRAsyncTask
 import com.example.myapplication.models.RawScannedRow
 import com.example.myapplication.models.TablePreset
+import com.example.myapplication.utils.DataNormalizer
 import com.example.myapplication.utils.ImportProcessor
 import com.example.myapplication.viewmodel.MainViewModel
 
@@ -678,8 +679,14 @@ fun DocumentImportContent(
                             if (rawRowsList.isEmpty()) {
                                 Toast.makeText(context, "Nav datu ko ģenerēt! Lūdzu, vispirms pievienojiet vai nolasiet rindas.", Toast.LENGTH_LONG).show()
                             } else {
-                                viewModel.updateImportTab(1)
-                                Toast.makeText(context, "Aprēķināts Excel imports! Apskatiet un lejupielādējiet 2. cilnē.", Toast.LENGTH_SHORT).show()
+                                val validationError = DataNormalizer.validateRequiredColumns(rawRowsList, activePreset)
+                                if (validationError != null) {
+                                    Toast.makeText(context, validationError, Toast.LENGTH_LONG).show()
+                                } else {
+                                    DataNormalizer.normalizeRows(rawRowsList, activePreset)
+                                    viewModel.updateImportTab(1)
+                                    Toast.makeText(context, "Aprēķināts Excel imports! Apskatiet un lejupielādējiet 2. cilnē.", Toast.LENGTH_SHORT).show()
+                                }
                             }
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E7E34), contentColor = Color.White),

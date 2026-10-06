@@ -101,3 +101,9 @@ $$\text{<date>}\text{<production\_step>}\text{.xlsx}$$
 - **Min SDK:** 24 (Android 7.0) | **Target SDK:** 37
 - **Networking:** HTTPS Connection to OCR.space API (`https://api.ocr.space/parse/image`, `OCREngine=3`).
 - **Data Persistence:** Android Assets (`assets/presets.json`) + Internal File I/O (`filesDir`).
+- **Data Normalization Module (`DataNormalizer.kt`):**
+  - **Post-OCR Normalization Pipeline:** Automatically sanitizes and transforms raw OCR tokens and manual edits.
+  - **Forward-Filling:** Automatically propagates date and operator values down from the last filled row on the page.
+  - **Enum Whitelists:** Validates operator codes, panel types (`V/V`, `V/N`, `N/N`), and layer codes (`VIZ`, `NEV`) against preset configurations.
+  - **Nullability Enforcement:** Blocks Excel import generation (`Ģenerēt importu`) if any required column (`nullable == false` / "Obligāts") contains empty values.
+  - **Diefenbacher Rule (Rule 9):** User-defined max ratio threshold (`maxOutgoingRatio`, default 13.0). Clears `outgoing_m` if `outgoing_m / amount` exceeds the threshold.

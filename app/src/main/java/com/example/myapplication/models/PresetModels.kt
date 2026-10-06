@@ -103,6 +103,7 @@ data class TablePreset(
     val key: String,
     val taskName: String,
     val dateFormat: String = "%d/%m/%Y",
+    val maxOutgoingRatio: Double = 13.0,
     val columns: List<PresetColumn> = emptyList()
 ) {
     fun toJsonObject(): JSONObject {
@@ -110,6 +111,7 @@ data class TablePreset(
         json.put("key", key)
         json.put("task_name", taskName)
         json.put("date_format", dateFormat)
+        json.put("max_outgoing_ratio", maxOutgoingRatio)
 
         val colArr = JSONArray()
         columns.forEach { colArr.put(it.toJsonObject()) }
@@ -123,6 +125,7 @@ data class TablePreset(
             val presetKey = json.optString("key", key)
             val taskName = json.optString("task_name", presetKey)
             val dateFormat = json.optString("date_format", "%d/%m/%Y")
+            val maxOutgoingRatio = json.optDouble("max_outgoing_ratio", 13.0)
 
             val columnsList = mutableListOf<PresetColumn>()
             val colArray = json.optJSONArray("columns")
@@ -137,6 +140,7 @@ data class TablePreset(
                 key = presetKey,
                 taskName = taskName,
                 dateFormat = dateFormat,
+                maxOutgoingRatio = maxOutgoingRatio,
                 columns = columnsList
             )
         }
