@@ -37,22 +37,21 @@ import com.example.myapplication.dependancy.IOCRCallBack
 import com.example.myapplication.dependancy.OCRAsyncTask
 import com.example.myapplication.models.RawScannedRow
 import com.example.myapplication.models.TablePreset
-import com.example.myapplication.repository.PresetRepository
 import com.example.myapplication.utils.ImportProcessor
+import com.example.myapplication.viewmodel.MainViewModel
 
 @Composable
 fun DocumentImportContent(
-    rawRowsList: MutableList<RawScannedRow>,
-    selectedProcess: String,
-    onProcessChange: (String) -> Unit,
+    viewModel: MainViewModel,
     activePreset: TablePreset?,
-    ocrNotesText: String,
-    onOcrNotesChange: (String) -> Unit,
-    onNavigateToExport: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val mApiKey = BuildConfig.OCR_API_KEY
+
+    val rawRowsList = viewModel.rawRowsList
+    val selectedProcess = viewModel.selectedProcess.value
+    val ocrNotesText = viewModel.ocrNotesText.value
 
     // Skip manual check checkbox state (enabled by default)
     var skipManualCheck by rememberSaveable { mutableStateOf(true) }
@@ -97,7 +96,8 @@ fun DocumentImportContent(
                         currentPageNum = pageIndex + 1,
                         rotationAngle = rotation
                     )
-                    onOcrNotesChange(statusLog)
+                    viewModel.updateOcrNotes(statusLog)
+                    viewModel.saveRawRows()
                 }
             }
         )
@@ -210,7 +210,7 @@ fun DocumentImportContent(
                                 DropdownMenuItem(
                                     text = { Text(process) },
                                     onClick = {
-                                        onProcessChange(process)
+                                        viewModel.updateSelectedProcess(process)
                                         processDropdownExpanded = false
                                     }
                                 )
@@ -520,7 +520,7 @@ fun DocumentImportContent(
                                 activePreset?.columns?.forEach { col ->
                                     newRow.setCell(col.role, "")
                                 }
-                                rawRowsList.add(newRow)
+                                viewModel.addRawRow(newRow)
                             },
                             contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
                             colors = ButtonDefaults.filledTonalButtonColors()
@@ -645,8 +645,8 @@ fun DocumentImportContent(
                                                     textColor = textColor
                                                 ) { newValue ->
                                                     cellVal = newValue
-                                                    row.setCell(col.role, newValue)
-                                                    row.setCell(col.sourceHeader, newValue)
+                                                    viewModel.updateRawCell(row, col.role, newValue)
+                                                    viewModel.updateRawCell(row, col.sourceHeader, newValue)
                                                 }
                                             }
                                         }
@@ -658,7 +658,7 @@ fun DocumentImportContent(
                                             Text(
                                                 text = "✕",
                                                 modifier = Modifier
-                                                    .clickable { rawRowsList.removeAt(index) }
+                                                    .clickable { viewModel.removeRawRow(index) }
                                                     .padding(8.dp),
                                                 color = MaterialTheme.colorScheme.error,
                                                 fontWeight = FontWeight.Bold
@@ -678,7 +678,7 @@ fun DocumentImportContent(
                             if (rawRowsList.isEmpty()) {
                                 Toast.makeText(context, "Nav datu ko ģenerēt! Lūdzu, vispirms pievienojiet vai nolasiet rindas.", Toast.LENGTH_LONG).show()
                             } else {
-                                onNavigateToExport()
+                                viewModel.updateImportTab(1)
                                 Toast.makeText(context, "Aprēķināts Excel imports! Apskatiet un lejupielādējiet 2. cilnē.", Toast.LENGTH_SHORT).show()
                             }
                         },
@@ -721,7 +721,7 @@ fun DocumentImportContent(
                                 Box(modifier = Modifier.padding(start = 12.dp, end = 12.dp, bottom = 12.dp)) {
                                     OutlinedTextField(
                                         value = ocrNotesText,
-                                        onValueChange = onOcrNotesChange,
+                                        onValueChange = { viewModel.updateOcrNotes(it) },
                                         modifier = Modifier.fillMaxWidth(),
                                         textStyle = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 12.sp),
                                         minLines = 3

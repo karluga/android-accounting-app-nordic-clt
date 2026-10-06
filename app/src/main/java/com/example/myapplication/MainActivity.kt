@@ -10,18 +10,18 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.*
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.sp
-import com.example.myapplication.models.ProductionRow
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.myapplication.ui.screens.AutomaticPaymentsScreen
 import com.example.myapplication.ui.screens.ImportScreen
 import com.example.myapplication.ui.screens.SalariesScreen
 import com.example.myapplication.ui.theme.MyApplicationTheme
+import com.example.myapplication.viewmodel.MainViewModel
 
 class MainActivity : ComponentActivity()
 {
@@ -48,17 +48,10 @@ enum class AppDestinations(
 
 @PreviewScreenSizes
 @Composable
-fun MyApplicationApp()
+fun MyApplicationApp(viewModel: MainViewModel = viewModel())
 {
-    var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.IMPORT) }
-
-    // Global state for shared table rows so salaries screen can dynamically calculate based on it
-    val rowsList = remember { mutableStateListOf<ProductionRow>() }
-
-    // OCR notes state
-    var ocrNotesText by rememberSaveable {
-        mutableStateOf("Sistēma gatava darbam. Gaida dokumentu augšupielādi...")
-    }
+    val currentDestination = viewModel.currentDestination.value
+    val rowsList = viewModel.rowsList
 
     SelectionContainer {
         NavigationSuiteScaffold(
@@ -80,7 +73,7 @@ fun MyApplicationApp()
                             )
                         },
                         selected = it == currentDestination,
-                        onClick = { currentDestination = it }
+                        onClick = { viewModel.updateDestination(it) }
                     )
                 }
             }
@@ -88,9 +81,7 @@ fun MyApplicationApp()
             Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                 when (currentDestination) {
                     AppDestinations.IMPORT -> ImportScreen(
-                        rowsList = rowsList,
-                        ocrNotesText = ocrNotesText,
-                        onOcrNotesChange = { ocrNotesText = it },
+                        viewModel = viewModel,
                         modifier = Modifier.padding(innerPadding)
                     )
                     AppDestinations.SALARIES -> SalariesScreen(

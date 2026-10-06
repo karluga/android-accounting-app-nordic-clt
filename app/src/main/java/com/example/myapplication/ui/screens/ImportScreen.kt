@@ -6,38 +6,24 @@ import androidx.compose.material3.SecondaryScrollableTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.myapplication.models.ProductionRow
-import com.example.myapplication.models.RawScannedRow
 import com.example.myapplication.repository.PresetRepository
+import com.example.myapplication.viewmodel.MainViewModel
 
 @Composable
 fun ImportScreen(
-    ocrNotesText: String,
-    onOcrNotesChange: (String) -> Unit,
-    modifier: Modifier = Modifier,
-    rowsList: MutableList<ProductionRow> = mutableListOf()
+    viewModel: MainViewModel,
+    modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
 
-    // Sub-tab selection state: 0 = Dokumentu apstrāde, 1 = Lejupielādēt Excel importu, 2 = Tabulu Preseti
-    var selectedTab by rememberSaveable { mutableIntStateOf(0) }
-
-    // Active selected process step
-    var selectedProcess by rememberSaveable { mutableStateOf("1. Audzēšana") }
-
-    // List of raw scanned rows for Tab 1 editing (starts empty until document is scanned)
-    val rawRowsList = remember { mutableStateListOf<RawScannedRow>() }
+    val selectedTab = viewModel.selectedImportTab.intValue
+    val selectedProcess = viewModel.selectedProcess.value
+    val rawRowsList = viewModel.rawRowsList
 
     // Retrieve active Preset
     val activePreset = remember(selectedProcess) {
@@ -50,17 +36,17 @@ fun ImportScreen(
         SecondaryScrollableTabRow(selectedTabIndex = selectedTab, edgePadding = 8.dp) {
             Tab(
                 selected = selectedTab == 0,
-                onClick = { selectedTab = 0 },
+                onClick = { viewModel.updateImportTab(0) },
                 text = { Text("1. Dokumentu apstrāde", fontWeight = FontWeight.Bold) }
             )
             Tab(
                 selected = selectedTab == 1,
-                onClick = { selectedTab = 1 },
+                onClick = { viewModel.updateImportTab(1) },
                 text = { Text("2. Lejupielādēt Excel importu", fontWeight = FontWeight.Bold) }
             )
             Tab(
                 selected = selectedTab == 2,
-                onClick = { selectedTab = 2 },
+                onClick = { viewModel.updateImportTab(2) },
                 text = { Text("Tabulu Preseti", fontWeight = FontWeight.Bold) }
             )
         }
@@ -82,18 +68,8 @@ fun ImportScreen(
             else -> {
                 // Tab 1: Document Processing Flow
                 DocumentImportContent(
-                    rawRowsList = rawRowsList,
-                    selectedProcess = selectedProcess,
-                    onProcessChange = { newProcess ->
-                        selectedProcess = newProcess
-                        // Headers automatically update to active preset; rawRowsList holds user/scanned data
-                    },
+                    viewModel = viewModel,
                     activePreset = activePreset,
-                    ocrNotesText = ocrNotesText,
-                    onOcrNotesChange = onOcrNotesChange,
-                    onNavigateToExport = {
-                        selectedTab = 1
-                    },
                     modifier = Modifier.fillMaxSize()
                 )
             }
