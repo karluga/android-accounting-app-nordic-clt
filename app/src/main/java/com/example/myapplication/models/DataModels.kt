@@ -1,7 +1,15 @@
 package com.example.myapplication.models
 
-import com.example.myapplication.R
 import java.util.UUID
+
+// Data class representing raw scanned table rows before import generation
+data class RawScannedRow(
+    val id: String = UUID.randomUUID().toString(),
+    val cells: MutableMap<String, String> = mutableMapOf()
+) {
+    fun getCell(key: String): String = cells[key] ?: ""
+    fun setCell(key: String, value: String) { cells[key] = value }
+}
 
 // Data class representing an import row matching the template
 data class ProductionRow(

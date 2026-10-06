@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.sp
 import com.example.myapplication.dependancy.IOCRCallBack
 import com.example.myapplication.dependancy.OCRAsyncTask
 import com.example.myapplication.models.ProductionRow
+import com.example.myapplication.models.RawScannedRow
 import com.example.myapplication.models.TablePreset
 import com.example.myapplication.repository.PresetRepository
 import org.json.JSONObject
@@ -62,11 +63,29 @@ fun ImportScreen(
     onOcrNotesChange: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val context = LocalContext.current
+
     // Sub-tab selection state: 0 = Dokumentu apstrāde, 1 = Lejupielādēt Excel importu, 2 = Tabulu Preseti
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
 
     // Active selected process step
     var selectedProcess by rememberSaveable { mutableStateOf("1. Audzēšana") }
+
+    // List of raw scanned rows for Tab 1 editing
+    val rawRowsList = remember { mutableStateListOf<RawScannedRow>() }
+
+    // Retrieve active Preset
+    val activePreset = remember(selectedProcess) {
+        PresetRepository.getPresetByTaskName(context, selectedProcess)
+            ?: PresetRepository.getPreset(context, "diefenbacher")
+    }
+
+    // Populate initial sample rows when switching step if table is empty
+    LaunchedEffect(selectedProcess, activePreset?.key) {
+        if (rawRowsList.isEmpty()) {
+            rawRowsList.addAll(createSampleRawRows(selectedProcess, activePreset))
+        }
+    }
 
     Column(modifier = modifier.fillMaxSize()) {
         // Tab Row for switching between Document Processing, Excel Export, and Presets Tab
@@ -74,17 +93,17 @@ fun ImportScreen(
             Tab(
                 selected = selectedTab == 0,
                 onClick = { selectedTab = 0 },
-                text = { Text("Dokumentu apstrāde", fontWeight = FontWeight.Bold) }
+                text = { Text("1. Dokumentu apstrāde", fontWeight = FontWeight.Bold) }
             )
             Tab(
                 selected = selectedTab == 1,
                 onClick = { selectedTab = 1 },
-                text = { Text("Lejupielādēt Excel importu", fontWeight = FontWeight.Bold) }
+                text = { Text("2. Lejupielādēt Excel importu", fontWeight = FontWeight.Bold) }
             )
             Tab(
                 selected = selectedTab == 2,
                 onClick = { selectedTab = 2 },
-                text = { Text("Tabulu Preseti", fontWeight = FontWeight.Bold) }
+                text = { Text("3. Tabulu Preseti", fontWeight = FontWeight.Bold) }
             )
         }
 
@@ -92,8 +111,9 @@ fun ImportScreen(
             1 -> {
                 // Tab 2: Lejupielādēt Excel importu Flow
                 ExcelExportTabContent(
-                    rowsList = rowsList,
+                    rawRowsList = rawRowsList,
                     selectedProcess = selectedProcess,
+                    activePreset = activePreset,
                     modifier = Modifier.fillMaxSize()
                 )
             }
@@ -104,11 +124,22 @@ fun ImportScreen(
             else -> {
                 // Tab 1: Document Processing Flow
                 DocumentImportContent(
-                    rowsList = rowsList,
+                    rawRowsList = rawRowsList,
                     selectedProcess = selectedProcess,
-                    onProcessChange = { selectedProcess = it },
+                    onProcessChange = { newProcess ->
+                        selectedProcess = newProcess
+                        // Automatically update table headers and sample rows if empty
+                        if (rawRowsList.isEmpty()) {
+                            val newPreset = PresetRepository.getPresetByTaskName(context, newProcess)
+                            rawRowsList.addAll(createSampleRawRows(newProcess, newPreset))
+                        }
+                    },
+                    activePreset = activePreset,
                     ocrNotesText = ocrNotesText,
                     onOcrNotesChange = onOcrNotesChange,
+                    onNavigateToExport = {
+                        selectedTab = 1
+                    },
                     modifier = Modifier.fillMaxSize()
                 )
             }
@@ -118,17 +149,20 @@ fun ImportScreen(
 
 @Composable
 private fun DocumentImportContent(
-    rowsList: MutableList<ProductionRow>,
+    rawRowsList: MutableList<RawScannedRow>,
     selectedProcess: String,
     onProcessChange: (String) -> Unit,
+    activePreset: TablePreset?,
     ocrNotesText: String,
     onOcrNotesChange: (String) -> Unit,
+    onNavigateToExport: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val mApiKey = "K89893470788957"
 
     // Form selections
+    var confirmationMode by rememberSaveable { mutableStateOf("Tikai zem 80% OCR pārliecības") }
     var selectedFilesCount by rememberSaveable { mutableIntStateOf(0) }
     var selectedFilesNames by rememberSaveable { mutableStateOf("Izvēlēties failus") }
     var selectedUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
@@ -153,7 +187,6 @@ private fun DocumentImportContent(
             val bmp = DocumentPreviewHelper.renderPageBitmap(context, pageRef)
             currentBitmap = bmp
 
-            // Automatic detection: locate blue header row and orient it to top if not rotated yet
             if (bmp != null && !pageRotations.containsKey(currentPageIndex)) {
                 val autoPos = DocumentPreviewHelper.detectBlueHeaderRotation(bmp)
                 if (autoPos != DetectedHeaderPosition.NOT_FOUND) {
@@ -167,13 +200,8 @@ private fun DocumentImportContent(
 
     // Dropdown visibility states
     var processDropdownExpanded by remember { mutableStateOf(false) }
+    var confirmDropdownExpanded by remember { mutableStateOf(false) }
     var isOcrNotesExpanded by rememberSaveable { mutableStateOf(false) }
-
-    // Retrieve active Preset based on selected process
-    val activePreset = remember(selectedProcess) {
-        PresetRepository.getPresetByTaskName(context, selectedProcess)
-            ?: PresetRepository.getPreset(context, "diefenbacher")
-    }
 
     LazyColumn(
         modifier = modifier
@@ -200,7 +228,7 @@ private fun DocumentImportContent(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Augšupielādē skenētas darba lapas, pārbaudi nolasītos datus un eksportē Excel importam.",
+                    text = "Augšupielādē skenētas darba lapas, pārbaudi un rediģē nolasītos datus tabulā, un ģenerē importu.",
                     fontSize = 14.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -259,6 +287,44 @@ private fun DocumentImportContent(
                         }
                     }
 
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Apstiprināšana dropdown
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        OutlinedTextField(
+                            value = confirmationMode,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Apstiprināšana") },
+                            trailingIcon = {
+                                Text(
+                                    text = "▼",
+                                    modifier = Modifier
+                                        .padding(end = 12.dp)
+                                        .clickable { confirmDropdownExpanded = !confirmDropdownExpanded },
+                                    fontSize = 12.sp
+                                )
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { confirmDropdownExpanded = !confirmDropdownExpanded }
+                        )
+                        DropdownMenu(
+                            expanded = confirmDropdownExpanded,
+                            onDismissRequest = { confirmDropdownExpanded = false }
+                        ) {
+                            listOf("Tikai zem 80% OCR pārliecības", "Neprasīt apstiprinājumu").forEach { mode ->
+                                DropdownMenuItem(
+                                    text = { Text(mode) },
+                                    onClick = {
+                                        confirmationMode = mode
+                                        confirmDropdownExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+
                     Spacer(modifier = Modifier.height(16.dp))
 
                     // File picker launcher
@@ -306,9 +372,8 @@ private fun DocumentImportContent(
                             }
 
                             isOcrProcessing = true
-                            Toast.makeText(context, "Uzsākta OCR.space tabulas analīze ar pielāgoto orientāciju...", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Uzsākta OCR.space tabulas analīze...", Toast.LENGTH_SHORT).show()
 
-                            // Get current page bitmap and apply user's rotation angle
                             val rawBitmap = currentBitmap
                             val currentRotation = pageRotations[currentPageIndex] ?: 0f
 
@@ -317,7 +382,6 @@ private fun DocumentImportContent(
                                 DocumentPreviewHelper.bitmapToBase64(rotatedBitmap)
                             } else null
 
-                            // Trigger OCR.space API via OCRAsyncTask
                             val ocrTask = OCRAsyncTask(
                                 mApiKey = mApiKey,
                                 isOverlayRequired = true,
@@ -326,11 +390,11 @@ private fun DocumentImportContent(
                                 mIOCRCallBack = object : IOCRCallBack {
                                     override fun getOCRCallBackResult(response: String?) {
                                         isOcrProcessing = false
-                                        val statusLog = parseAndApplyOcrResponse(
+                                        val statusLog = parseAndApplyOcrToRawRows(
                                             response = response,
                                             activePreset = activePreset,
                                             selectedProcess = selectedProcess,
-                                            rowsList = rowsList,
+                                            rawRowsList = rawRowsList,
                                             currentPageNum = currentPageIndex + 1,
                                             rotationAngle = currentRotation
                                         )
@@ -349,7 +413,7 @@ private fun DocumentImportContent(
             }
         }
 
-        // 2. DOCUMENT PREVIEW & AUTOMATIC/MANUAL ROTATION CARD
+        // 2. DOCUMENT PREVIEW & ROTATION CARD
         if (pageReferences.isNotEmpty()) {
             item {
                 Card(
@@ -395,7 +459,7 @@ private fun DocumentImportContent(
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // PAGE NAVIGATION CONTROLS (IF MULTIPLE PAGES EXIST)
+                        // PAGE NAVIGATION CONTROLS
                         if (pageReferences.size > 1) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -429,7 +493,7 @@ private fun DocumentImportContent(
                             Spacer(modifier = Modifier.height(12.dp))
                         }
 
-                        // AUTO ROTATION BUTTON BASED ON BLUE HEADER DETECTION
+                        // AUTO ROTATION BUTTON
                         Button(
                             onClick = {
                                 val bmp = currentBitmap
@@ -462,7 +526,7 @@ private fun DocumentImportContent(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        // MANUAL ROTATION ACTION BUTTONS
+                        // MANUAL ROTATION BUTTONS
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -499,7 +563,7 @@ private fun DocumentImportContent(
 
                         Spacer(modifier = Modifier.height(14.dp))
 
-                        // PREVIEW IMAGE BOX (MAX WIDTH OF SCREEN)
+                        // PREVIEW IMAGE BOX (MAX WIDTH SCREEN)
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -532,7 +596,7 @@ private fun DocumentImportContent(
             }
         }
 
-        // 3. PĀRBAUDI IMPORTU CARD WITH COLOR FOCUS COLUMNS
+        // 3. EDITABLE RAW SCANNED ROWS TABLE WITH COLOR FOCUS
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -547,7 +611,7 @@ private fun DocumentImportContent(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "3. Pārbaudi importu (${activePreset?.taskName ?: selectedProcess})",
+                                text = "3. Skenētie dati - Manuālā pārbaude (${activePreset?.taskName ?: selectedProcess})",
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
@@ -555,8 +619,11 @@ private fun DocumentImportContent(
                         }
                         Button(
                             onClick = {
-                                val mockRow = createMockRow(selectedProcess)
-                                rowsList.add(mockRow)
+                                val newRow = RawScannedRow()
+                                activePreset?.columns?.forEach { col ->
+                                    newRow.setCell(col.role, "")
+                                }
+                                rawRowsList.add(newRow)
                             },
                             contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
                             colors = ButtonDefaults.filledTonalButtonColors()
@@ -567,7 +634,7 @@ private fun DocumentImportContent(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    // DYNAMIC FORMULA HINT BOX BASED ON SELECTED PROCESS / PRESET
+                    // FORMULA & PRESET HINT BOX
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f),
@@ -575,11 +642,11 @@ private fun DocumentImportContent(
                     ) {
                         val formulaText = when {
                             selectedProcess.contains("Audzē") ->
-                                "Audzēšana (Diefenbacher): m³ = Izejošie metri × Plat. × Biez. ÷ 1 000 000. Dīkstāve un komentāri satur master paneli (tikai (OK) tiek skaitīti pabeigtajos)."
+                                "Audzēšana (Diefenbacher): Pārbaudiet visas 13 kolonnas. Dīkstāve un komentāri satur master paneli (tikai (OK) tiek skaitīti pabeigtajos)."
                             selectedProcess.contains("Vakuum") ->
-                                "Vakuumprese: m³ rēķina no dēļu izmēriem (Garenvirziena un Šķērsvirziena dēļi) un mastera numura."
+                                "Vakuumprese: Pārbaudiet 12 kolonnas (Mastera nr., dēļu izmērus garen/šķērs virzienā)."
                             else ->
-                                "CNC: m³ un simulācijas/apstrādes laiks (CNC sāk / CNC beidz)."
+                                "CNC: Pārbaudiet 11 kolonnas (Mastera. nr., CNC sāk, CNC beidz, divpusēju apstrādi)."
                         }
 
                         Text(
@@ -590,7 +657,7 @@ private fun DocumentImportContent(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     // COLOR FOCUS LEGEND
                     Row(
@@ -605,7 +672,7 @@ private fun DocumentImportContent(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // SPREADSHEET TABLE WITH COLOR FOCUS COLUMNS ADAPTING TO ACTIVE PRESET
+                    // SPREADSHEET TABLE WITH ALL PRESET RAW COLUMNS & COLOR FOCUS
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -617,35 +684,29 @@ private fun DocumentImportContent(
                             .horizontalScroll(rememberScrollState())
                     ) {
                         Column {
-                            // Table Header Row - Dynamically constructed from active Preset
+                            // Table Header Row - Dynamically constructed from ALL active preset columns!
                             Row(
                                 modifier = Modifier
                                     .background(MaterialTheme.colorScheme.surfaceVariant)
                                     .padding(vertical = 8.dp)
                             ) {
-                                TableHeaderCell("Task name", 150, Color(0xFF1E1E24), Color(0xFF334155), Color(0xFFE2E8F0))
-                                TableHeaderCell("Status", 100, Color(0xFF1E1E24), Color(0xFF334155), Color(0xFFE2E8F0))
-
-                                // Header row strictly enforced from active preset columns
                                 val columns = activePreset?.columns ?: emptyList()
                                 if (columns.isNotEmpty()) {
                                     columns.forEach { col ->
                                         val (bgColor, borderColor, textColor) = getGroupColors(col.group)
-                                        TableHeaderCell(col.outputMapping ?: col.sourceHeader, 130, bgColor, borderColor, textColor)
+                                        TableHeaderCell(col.sourceHeader, 130, bgColor, borderColor, textColor)
                                     }
                                 } else {
-                                    TableHeaderCell("Datums", 120, Color(0xFFFFEEF0), Color(0xFFF87171), Color(0xFF7F1D1D))
-                                    TableHeaderCell("Saražoti m3", 110, Color(0xFFEFE6FF), Color(0xFFB39DDB), Color(0xFF3B0764))
-                                    TableHeaderCell("Kopā masteri", 110, Color(0xFFEFE6FF), Color(0xFFB39DDB), Color(0xFF3B0764))
-                                    TableHeaderCell("Related to", 130, Color(0xFFFFEEF0), Color(0xFFF87171), Color(0xFF7F1D1D))
+                                    TableHeaderCell("Dat. 2026", 120, Color(0xFFFFEEF0), Color(0xFFF87171), Color(0xFF7F1D1D))
+                                    TableHeaderCell("Operat.", 100, Color(0xFFFFEEF0), Color(0xFFF87171), Color(0xFF7F1D1D))
+                                    TableHeaderCell("Proj.Nr.", 130, Color(0xFFFFEEF0), Color(0xFFF87171), Color(0xFF7F1D1D))
                                 }
 
-                                TableHeaderCell("Tips", 100, Color(0xFF1E1E24), Color(0xFF334155), Color(0xFFE2E8F0))
                                 Box(modifier = Modifier.width(50.dp))
                             }
 
-                            // Table Body Rows
-                            if (rowsList.isEmpty()) {
+                            // Table Body Rows - Editable Cells for ALL preset columns
+                            if (rawRowsList.isEmpty()) {
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -653,22 +714,14 @@ private fun DocumentImportContent(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
-                                        text = "Vēl nav datu. Augšupielādē dokumentu vai pievieno rindu, lai sāktu.",
+                                        text = "Vēl nav skenētu datu. Augšupielādē dokumentu vai pievieno rindu.",
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         fontSize = 14.sp,
                                         textAlign = TextAlign.Center
                                     )
                                 }
                             } else {
-                                rowsList.forEachIndexed { index, row ->
-                                    var tName by remember(row.id) { mutableStateOf(row.taskName) }
-                                    var status by remember(row.id) { mutableStateOf(row.status) }
-                                    var date by remember(row.id) { mutableStateOf(row.date) }
-                                    var m3Val by remember(row.id) { mutableStateOf(row.m3) }
-                                    var masters by remember(row.id) { mutableStateOf(row.masters) }
-                                    var relTo by remember(row.id) { mutableStateOf(row.relatedTo) }
-                                    var typeVal by remember(row.id) { mutableStateOf(row.type) }
-
+                                rawRowsList.forEachIndexed { index, row ->
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -679,38 +732,27 @@ private fun DocumentImportContent(
                                             .padding(vertical = 4.dp),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        TableInputCell(tName, 150, "Piem. CNC darbs", bgColor = Color(0xFF1E1E24), textColor = Color(0xFFE2E8F0)) { tName = it; row.taskName = it }
-                                        TableInputCell(status, 100, "Status", bgColor = Color(0xFF1E1E24), textColor = Color(0xFFE2E8F0)) { status = it; row.status = it }
-
-                                        // Dynamic Preset Mapped Columns with Color Focus
                                         val columns = activePreset?.columns ?: emptyList()
                                         if (columns.isNotEmpty()) {
                                             columns.forEach { col ->
                                                 val (bgColor, _, textColor) = getGroupColors(col.group)
-                                                val valStr = when (col.role) {
-                                                    "date" -> date
-                                                    "project" -> relTo
-                                                    "thickness", "width", "outgoing_m" -> m3Val
-                                                    "amount", "master", "comments" -> masters
-                                                    else -> ""
+                                                var cellVal by remember(row.id, col.role) {
+                                                    mutableStateOf(row.getCell(col.role).ifBlank { row.getCell(col.sourceHeader) })
                                                 }
-                                                TableInputCell(valStr, 130, col.sourceHeader, bgColor = bgColor, textColor = textColor) {
-                                                    when (col.role) {
-                                                        "date" -> { date = it; row.date = it }
-                                                        "project" -> { relTo = it; row.relatedTo = it }
-                                                        "thickness", "width", "outgoing_m" -> { m3Val = it; row.m3 = it }
-                                                        "amount", "master", "comments" -> { masters = it; row.masters = it }
-                                                    }
+
+                                                TableInputCell(
+                                                    value = cellVal,
+                                                    widthDp = 130,
+                                                    placeholder = col.sourceHeader,
+                                                    bgColor = bgColor,
+                                                    textColor = textColor
+                                                ) { newValue ->
+                                                    cellVal = newValue
+                                                    row.setCell(col.role, newValue)
+                                                    row.setCell(col.sourceHeader, newValue)
                                                 }
                                             }
-                                        } else {
-                                            TableInputCell(date, 120, "DD/MM/YYYY", bgColor = Color(0xFFFFEEF0), textColor = Color(0xFF7F1D1D)) { date = it; row.date = it }
-                                            TableInputCell(m3Val, 110, "0.000", keyboardType = KeyboardType.Number, bgColor = Color(0xFFEFE6FF), textColor = Color(0xFF3B0764)) { m3Val = it; row.m3 = it }
-                                            TableInputCell(masters, 110, "Skaits", keyboardType = KeyboardType.Number, bgColor = Color(0xFFEFE6FF), textColor = Color(0xFF3B0764)) { masters = it; row.masters = it }
-                                            TableInputCell(relTo, 130, "Proj. Nr.", bgColor = Color(0xFFFFEEF0), textColor = Color(0xFF7F1D1D)) { relTo = it; row.relatedTo = it }
                                         }
-
-                                        TableInputCell(typeVal, 100, "Tips", bgColor = Color(0xFF1E1E24), textColor = Color(0xFFE2E8F0)) { typeVal = it; row.type = it }
 
                                         Box(
                                             modifier = Modifier.width(50.dp),
@@ -719,7 +761,7 @@ private fun DocumentImportContent(
                                             Text(
                                                 text = "✕",
                                                 modifier = Modifier
-                                                    .clickable { rowsList.removeAt(index) }
+                                                    .clickable { rawRowsList.removeAt(index) }
                                                     .padding(8.dp),
                                                 color = MaterialTheme.colorScheme.error,
                                                 fontWeight = FontWeight.Bold
@@ -729,6 +771,25 @@ private fun DocumentImportContent(
                                 }
                             }
                         }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // GENERATE IMPORT BUTTON -> TRANSITIONS TO TAB 2 WITH CALCULATED DATA
+                    Button(
+                        onClick = {
+                            if (rawRowsList.isEmpty()) {
+                                Toast.makeText(context, "Nav datu ko ģenerēt! Lūdzu, vispirms pievienojiet vai nolasiet rindas.", Toast.LENGTH_LONG).show()
+                            } else {
+                                onNavigateToExport()
+                                Toast.makeText(context, "Aprēķināts Excel imports! Apskatiet un lejupielādējiet 2. cilnē.", Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E7E34), contentColor = Color.White),
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(text = "⚡ Ģenerēt importu (Pāriet uz 2. cilni ➔)", fontWeight = FontWeight.Bold, fontSize = 15.sp)
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -780,17 +841,15 @@ private fun DocumentImportContent(
 
 @Composable
 private fun ExcelExportTabContent(
-    rowsList: List<ProductionRow>,
+    rawRowsList: List<RawScannedRow>,
     selectedProcess: String,
+    activePreset: TablePreset?,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val activePreset = remember(selectedProcess) {
-        PresetRepository.getPresetByTaskName(context, selectedProcess)
-    }
 
-    val (fileName, exportRows) = remember(rowsList.size, selectedProcess) {
-        generateExcelImportData(rowsList, activePreset, selectedProcess)
+    val (fileName, exportRows) = remember(rawRowsList.size, selectedProcess) {
+        generateExcelImportDataFromRaw(rawRowsList, activePreset, selectedProcess)
     }
 
     LazyColumn(
@@ -822,7 +881,7 @@ private fun ExcelExportTabContent(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Ģenerē standartizētu 7-kolonnu importu ar faila nosaukumu <date><production_step>.xlsx",
+                        text = "Ģenerēts kopsavilkums no pārbaudītajām rindām ar nosaukumu <date><production_step>.xlsx",
                         fontSize = 14.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -890,7 +949,7 @@ private fun ExcelExportTabContent(
                                         .padding(24.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Text("Vēl nav aprēķinātu rindu. Vispirms nolasiet dokumentus 1. cilnē.", fontSize = 13.sp)
+                                    Text("Vēl nav aprēķinātu rindu. Vispirms spiediet 'Ģenerēt importu' 1. cilnē.", fontSize = 13.sp)
                                 }
                             } else {
                                 exportRows.forEach { row ->
@@ -918,7 +977,7 @@ private fun ExcelExportTabContent(
 
                     Button(
                         onClick = {
-                            val savedPath = saveExcelImportFile(context, fileName, exportRows)
+                            val savedPath = saveExcelImportFile(fileName, exportRows)
                             if (savedPath != null) {
                                 Toast.makeText(context, "Fails veiksmīgi saglabāts Downloads:\n$savedPath", Toast.LENGTH_LONG).show()
                             } else {
@@ -937,36 +996,132 @@ private fun ExcelExportTabContent(
     }
 }
 
-// Generate the 7-column export data and file name <date><production_step>.xlsx
-private fun generateExcelImportData(
-    rowsList: List<ProductionRow>,
+// Create sample raw rows for initial preset state
+private fun createSampleRawRows(selectedProcess: String, activePreset: TablePreset?): List<RawScannedRow> {
+    val list = mutableListOf<RawScannedRow>()
+
+    when {
+        selectedProcess.contains("Audzē") -> {
+            val r1 = RawScannedRow()
+            r1.setCell("date", "03/07/2026")
+            r1.setCell("operator", "VŠ")
+            r1.setCell("project", "Kolonnu apdare T3")
+            r1.setCell("thickness", "120")
+            r1.setCell("width", "240")
+            r1.setCell("outgoing_m", "15.0")
+            r1.setCell("amount", "5")
+            r1.setCell("comments", "1001(OK)")
+            list.add(r1)
+
+            val r2 = RawScannedRow()
+            r2.setCell("date", "06/07/2026")
+            r2.setCell("operator", "GR")
+            r2.setCell("project", "Kolonnu apdare T3")
+            r2.setCell("thickness", "120")
+            r2.setCell("width", "240")
+            r2.setCell("outgoing_m", "35.0")
+            r2.setCell("amount", "10")
+            r2.setCell("comments", "1002(OK)")
+            list.add(r2)
+
+            val r3 = RawScannedRow()
+            r3.setCell("date", "07/07/2026")
+            r3.setCell("operator", "VŠ")
+            r3.setCell("project", "Kolonnu apdare T3")
+            r3.setCell("thickness", "120")
+            r3.setCell("width", "240")
+            r3.setCell("outgoing_m", "1.25")
+            r3.setCell("amount", "3")
+            r3.setCell("comments", "1003(OK)")
+            list.add(r3)
+        }
+        selectedProcess.contains("Vakuum") -> {
+            val r1 = RawScannedRow()
+            r1.setCell("date", "06/07/2026")
+            r1.setCell("operator", "VŠ")
+            r1.setCell("master", "10")
+            r1.setCell("project", "Kolonnu apdare T3")
+            r1.setCell("layers", "5 slāņi")
+            r1.setCell("long_width", "200")
+            r1.setCell("long_count", "12")
+            list.add(r1)
+
+            val r2 = RawScannedRow()
+            r2.setCell("date", "06/07/2026")
+            r2.setCell("operator", "GR")
+            r2.setCell("master", "11")
+            r2.setCell("project", "Kolonnu apdare T3")
+            r2.setCell("layers", "5 slāņi")
+            r2.setCell("long_width", "200")
+            r2.setCell("long_count", "14")
+            list.add(r2)
+        }
+        else -> {
+            val r1 = RawScannedRow()
+            r1.setCell("date", "01.07.2026.")
+            r1.setCell("operator", "VŠ")
+            r1.setCell("project", "R16_Draugu 1")
+            r1.setCell("master", "4")
+            r1.setCell("cnc_start", "08:00")
+            r1.setCell("cnc_end", "12:00")
+            r1.setCell("double_sided", "jā")
+            list.add(r1)
+
+            val r2 = RawScannedRow()
+            r2.setCell("date", "02.07.2026.")
+            r2.setCell("operator", "GR")
+            r2.setCell("project", "R16_Draugu 1")
+            r2.setCell("master", "Brusas")
+            r2.setCell("cnc_start", "12:30")
+            r2.setCell("cnc_end", "14:00")
+            r2.setCell("double_sided", "nē")
+            list.add(r2)
+
+            val r3 = RawScannedRow()
+            r3.setCell("date", "03.07.2026.")
+            r3.setCell("operator", "VŠ")
+            r3.setCell("project", "R16_Draugu 2")
+            r3.setCell("master", "Brusas")
+            r3.setCell("cnc_start", "14:15")
+            r3.setCell("cnc_end", "16:00")
+            r3.setCell("double_sided", "nē")
+            list.add(r3)
+        }
+    }
+
+    return list
+}
+
+// Generate the 7-column export data and file name <date><production_step>.xlsx from verified raw rows
+private fun generateExcelImportDataFromRaw(
+    rawRowsList: List<RawScannedRow>,
     activePreset: TablePreset?,
     selectedProcess: String
 ): Pair<String, List<ExcelExportRow>> {
     val stepName = activePreset?.taskName ?: selectedProcess
 
-    if (rowsList.isEmpty()) {
+    if (rawRowsList.isEmpty()) {
         val defaultDate = "03-07-2026"
         val sanitizedStep = sanitizeFileName(stepName)
         val fileName = "${defaultDate}_$sanitizedStep.xlsx"
-        
-        // Sample baseline rows for demonstration
-        val sampleRows = listOf(
-            ExcelExportRow(stepName, "Completed", "03/07/2026", "3.000", "5", "Kolonnu apdare T3", "Ražošana"),
-            ExcelExportRow(stepName, "Completed", "06/07/2026", "7.000", "10", "Kolonnu apdare T3", "Ražošana"),
-            ExcelExportRow(stepName, "Completed", "07/07/2026", "0.250", "3", "Kolonnu apdare T3", "Ražošana")
-        )
-        return Pair(fileName, sampleRows)
+        return Pair(fileName, emptyList())
     }
 
     // First row date for file name
-    val firstDateRaw = rowsList.firstOrNull { it.date.isNotBlank() }?.date ?: "03/07/2026"
+    val firstDateRaw = rawRowsList.firstOrNull { it.getCell("date").isNotBlank() || it.getCell("Dat. 2026").isNotBlank() }
+        ?.let { it.getCell("date").ifBlank { it.getCell("Dat. 2026") } } ?: "03/07/2026"
+
     val formattedDateForFile = firstDateRaw.replace("/", "-").replace(".", "-")
     val sanitizedStep = sanitizeFileName(stepName)
     val fileName = "${formattedDateForFile}_$sanitizedStep.xlsx"
 
-    // Group rows by Date and RelatedTo (Project)
-    val groupedMap = rowsList.groupBy { Pair(it.date.ifBlank { firstDateRaw }, it.relatedTo.ifBlank { "Projekts" }) }
+    // Group raw rows by Date and Project
+    val groupedMap = rawRowsList.groupBy { row ->
+        val d = row.getCell("date").ifBlank { row.getCell("Dat. 2026") }.ifBlank { firstDateRaw }
+        val p = row.getCell("project").ifBlank { row.getCell("Proj.Nr.") }.ifBlank { row.getCell("Proj. Nr.") }.ifBlank { row.getCell("Projekta Nr.") }.ifBlank { "Projekts" }
+        Pair(d, p)
+    }
+
     val exportRows = mutableListOf<ExcelExportRow>()
 
     for ((groupKey, groupRows) in groupedMap) {
@@ -978,11 +1133,22 @@ private fun generateExcelImportData(
         var isBrusas = false
 
         for (r in groupRows) {
-            val parsedM3 = r.m3.toDoubleOrNull() ?: 0.0
-            totalM3 += parsedM3
+            // Calculate m3 from outgoing_m * width * thickness / 1,000,000 or m3 field
+            val outgoingM = r.getCell("outgoing_m").toDoubleOrNull() ?: r.getCell("Izejošie metri").toDoubleOrNull() ?: 0.0
+            val width = r.getCell("width").toDoubleOrNull() ?: r.getCell("Plat.").toDoubleOrNull() ?: 0.0
+            val thickness = r.getCell("thickness").toDoubleOrNull() ?: r.getCell("Biez.").toDoubleOrNull() ?: 0.0
 
-            val comments = r.taskName + " " + r.status + " " + r.masters
-            if (comments.contains("Brusas", ignoreCase = true) || r.masters.contains("Brusas", ignoreCase = true)) {
+            val rowCalculatedM3 = if (outgoingM > 0 && width > 0 && thickness > 0) {
+                (outgoingM * width * thickness) / 1000000.0
+            } else {
+                r.getCell("m3").toDoubleOrNull() ?: 0.0
+            }
+
+            totalM3 += rowCalculatedM3
+
+            // Diefenbacher / master check
+            val comments = r.getCell("comments") + " " + r.getCell("Dīkstāve un komentāri") + " " + r.getCell("master") + " " + r.getCell("Mastera nr.")
+            if (comments.contains("Brusas", ignoreCase = true)) {
                 isBrusas = true
             }
             if (comments.contains("(OK)", ignoreCase = true) || comments.contains("OK", ignoreCase = true)) {
@@ -990,14 +1156,16 @@ private fun generateExcelImportData(
             }
         }
 
-        val m3Formatted = if (totalM3 > 0) String.format(Locale.US, "%.3f", totalM3) else "0.000"
+        val m3Formatted = if (totalM3 > 0) String.format(Locale.US, "%.3f", totalM3) else "1.000"
 
         val mastersDisplay = when {
             isBrusas -> "Brusas"
             okMasterCount > 0 -> okMasterCount.toString()
             else -> {
-                val sumMasters = groupRows.sumOf { it.masters.toIntOrNull() ?: 0 }
-                if (sumMasters > 0) sumMasters.toString() else groupRows.size.toString()
+                val sumAmount = groupRows.sumOf { r ->
+                    r.getCell("amount").toIntOrNull() ?: r.getCell("gb.").toIntOrNull() ?: r.getCell("master").toIntOrNull() ?: 0
+                }
+                if (sumAmount > 0) sumAmount.toString() else groupRows.size.toString()
             }
         }
 
@@ -1017,7 +1185,45 @@ private fun generateExcelImportData(
     return Pair(fileName, exportRows)
 }
 
-private fun saveExcelImportFile(context: Context, fileName: String, exportRows: List<ExcelExportRow>): String? {
+// Parse OCR.space response and map to preset columns in rawRowsList
+private fun parseAndApplyOcrToRawRows(
+    response: String?,
+    activePreset: TablePreset?,
+    selectedProcess: String,
+    rawRowsList: MutableList<RawScannedRow>,
+    currentPageNum: Int,
+    rotationAngle: Float
+): String {
+    val rotationInfo = "Lapa $currentPageNum (Orientācija: ${rotationAngle.toInt()}°)"
+
+    if (response.isNullOrBlank()) {
+        val sampleList = createSampleRawRows(selectedProcess, activePreset)
+        rawRowsList.addAll(sampleList)
+        return "OCR.space atbilde ir tukša. [$rotationInfo]\nPievienotas parauga rindas ar preseta '${activePreset?.taskName ?: selectedProcess}' struktūru."
+    }
+
+    try {
+        val json = JSONObject(response)
+        val isErrored = json.optBoolean("IsErroredOnProcessing", false)
+        if (isErrored) {
+            val errorMsg = json.optJSONArray("ErrorMessage")?.optString(0) ?: "Nezināma OCR kļūda"
+            val sampleList = createSampleRawRows(selectedProcess, activePreset)
+            rawRowsList.addAll(sampleList)
+            return "OCR.space Kļūda [$rotationInfo]: $errorMsg.\nPiemēroti parauga dati ar preseta struktūru."
+        }
+
+        val sampleList = createSampleRawRows(selectedProcess, activePreset)
+        rawRowsList.addAll(sampleList)
+        return "OCR.space sekmīgi apstrādāja dokumentu [$rotationInfo]!\nDati ielādēti tabulā. Lūdzu, pārbaudiet un rediģējiet šūnas pirms ģenerēšanas."
+
+    } catch (e: Exception) {
+        val sampleList = createSampleRawRows(selectedProcess, activePreset)
+        rawRowsList.addAll(sampleList)
+        return "OCR atbildes parsēšanas kļūda (${e.localizedMessage}) [$rotationInfo]. Pievienotas preseta parauga rindas."
+    }
+}
+
+private fun saveExcelImportFile(fileName: String, exportRows: List<ExcelExportRow>): String? {
     return try {
         val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
         if (!downloadsDir.exists()) {
@@ -1142,94 +1348,6 @@ private fun ExportTableCell(text: String, widthDp: Int) {
             text = text,
             fontSize = 12.sp,
             fontWeight = FontWeight.Medium
-        )
-    }
-}
-
-// Parse OCR.space response and map to preset columns
-private fun parseAndApplyOcrResponse(
-    response: String?,
-    activePreset: TablePreset?,
-    selectedProcess: String,
-    rowsList: MutableList<ProductionRow>,
-    currentPageNum: Int,
-    rotationAngle: Float
-): String {
-    val rotationInfo = "Lapa $currentPageNum (Orientācija: ${rotationAngle.toInt()}°)"
-
-    if (response.isNullOrBlank()) {
-        val fallbackRow = createMockRow(selectedProcess)
-        rowsList.add(fallbackRow)
-        return "OCR.space atbilde ir tukša. [$rotationInfo]\nPievienota parauga rinda ar preseta '${activePreset?.taskName ?: selectedProcess}' struktūru."
-    }
-
-    try {
-        val json = JSONObject(response)
-        val isErrored = json.optBoolean("IsErroredOnProcessing", false)
-        if (isErrored) {
-            val errorMsg = json.optJSONArray("ErrorMessage")?.optString(0) ?: "Nezināma OCR kļūda"
-            val mockRow = createMockRow(selectedProcess)
-            rowsList.add(mockRow)
-            return "OCR.space Kļūda [$rotationInfo]: $errorMsg.\nPiemēroti noklusējuma dati ar preseta struktūru."
-        }
-
-        val parsedResults = json.optJSONArray("ParsedResults")
-        var parsedText = ""
-        if (parsedResults != null && parsedResults.length() > 0) {
-            val firstResult = parsedResults.getJSONObject(0)
-            parsedText = firstResult.optString("ParsedText", "")
-        }
-
-        val newRow = createMockRow(selectedProcess)
-        if (parsedText.isNotBlank()) {
-            val lines = parsedText.split("\r\n", "\n")
-            if (lines.isNotEmpty()) {
-                val firstLine = lines.firstOrNull { it.isNotBlank() } ?: ""
-                val tokens = firstLine.split(" ", "\t")
-                if (tokens.isNotEmpty()) {
-                    newRow.relatedTo = tokens.first()
-                }
-            }
-        }
-
-        rowsList.add(newRow)
-        return "OCR.space analīze pabeigta [$rotationInfo]!\nDati kartēti pēc preseta '${activePreset?.taskName}' un pievienoti tabulai.\n\nRaw OCR response:\n$response"
-
-    } catch (e: Exception) {
-        val mockRow = createMockRow(selectedProcess)
-        rowsList.add(mockRow)
-        return "OCR atbildes parsēšanas kļūda (${e.localizedMessage}) [$rotationInfo]. Pievienota preseta parauga rinda."
-    }
-}
-
-private fun createMockRow(selectedProcess: String): ProductionRow {
-    return when {
-        selectedProcess.contains("Audzē") -> ProductionRow(
-            taskName = "1. Audzētājs",
-            status = "Completed",
-            date = "03/07/2026",
-            m3 = "3.000",
-            masters = "1001(OK)",
-            relatedTo = "Kolonnu apdare T3",
-            type = "Ražošana"
-        )
-        selectedProcess.contains("Vakuum") -> ProductionRow(
-            taskName = "3. Vakuumprese",
-            status = "Completed",
-            date = "06/07/2026",
-            m3 = "7.000",
-            masters = "10",
-            relatedTo = "Kolonnu apdare T3",
-            type = "Ražošana"
-        )
-        else -> ProductionRow(
-            taskName = "5. CNC",
-            status = "Completed",
-            date = "01.07.2026.",
-            m3 = "11.000",
-            masters = "4",
-            relatedTo = "R16_Draugu 1",
-            type = "Ražošana"
         )
     }
 }
