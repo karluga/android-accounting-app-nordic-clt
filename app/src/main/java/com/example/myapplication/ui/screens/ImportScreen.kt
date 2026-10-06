@@ -183,7 +183,7 @@ private fun DocumentImportContent(
             mApiKey = mApiKey,
             isOverlayRequired = true,
             mImageDataOrUrl = base64Image,
-            mLanguage = "lat",
+            mLanguage = "eng",
             mIOCRCallBack = object : IOCRCallBack {
                 override fun getOCRCallBackResult(response: String?) {
                     isOcrProcessing = false
@@ -331,7 +331,7 @@ private fun DocumentImportContent(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "Izlaist manuālo pārbaudi dialogā, ja orientācija ir pareiza (noklusējums)",
+                            text = "Izlaist orientācijas pārbaudi",
                             fontSize = 13.sp,
                             color = MaterialTheme.colorScheme.onSurface
                         )

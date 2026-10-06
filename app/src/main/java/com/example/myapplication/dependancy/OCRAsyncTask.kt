@@ -30,7 +30,7 @@ class OCRAsyncTask(
                 apiKey = if (!mApiKey.isNullOrBlank()) mApiKey else com.example.myapplication.BuildConfig.OCR_API_KEY,
                 isOverlayRequired = isOverlayRequired,
                 imageDataOrUrl = mImageDataOrUrl,
-                language = if (!mLanguage.isNullOrBlank()) mLanguage else "lat"
+                language = if (!mLanguage.isNullOrBlank()) mLanguage else "eng"
             )
         } catch (e: Exception) {
             Log.e(TAG, "OCR Request failed", e)
