@@ -71,20 +71,13 @@ fun ImportScreen(
     // Active selected process step
     var selectedProcess by rememberSaveable { mutableStateOf("1. Audzēšana") }
 
-    // List of raw scanned rows for Tab 1 editing
+    // List of raw scanned rows for Tab 1 editing (starts empty until document is scanned)
     val rawRowsList = remember { mutableStateListOf<RawScannedRow>() }
 
     // Retrieve active Preset
     val activePreset = remember(selectedProcess) {
         PresetRepository.getPresetByTaskName(context, selectedProcess)
             ?: PresetRepository.getPreset(context, "diefenbacher")
-    }
-
-    // Populate initial sample rows when switching step if table is empty
-    LaunchedEffect(selectedProcess, activePreset?.key) {
-        if (rawRowsList.isEmpty()) {
-            rawRowsList.addAll(createSampleRawRows(selectedProcess, activePreset))
-        }
     }
 
     Column(modifier = modifier.fillMaxSize()) {
@@ -128,11 +121,7 @@ fun ImportScreen(
                     selectedProcess = selectedProcess,
                     onProcessChange = { newProcess ->
                         selectedProcess = newProcess
-                        // Automatically update table headers and sample rows if empty
-                        if (rawRowsList.isEmpty()) {
-                            val newPreset = PresetRepository.getPresetByTaskName(context, newProcess)
-                            rawRowsList.addAll(createSampleRawRows(newProcess, newPreset))
-                        }
+                        // Headers automatically update to active preset; rawRowsList holds user/scanned data
                     },
                     activePreset = activePreset,
                     ocrNotesText = ocrNotesText,
@@ -161,8 +150,9 @@ private fun DocumentImportContent(
     val context = LocalContext.current
     val mApiKey = "K89893470788957"
 
-    // Form selections
-    var confirmationMode by rememberSaveable { mutableStateOf("Tikai zem 80% OCR pārliecības") }
+    // Skip manual check checkbox state (enabled by default)
+    var skipManualCheck by rememberSaveable { mutableStateOf(true) }
+
     var selectedFilesCount by rememberSaveable { mutableIntStateOf(0) }
     var selectedFilesNames by rememberSaveable { mutableStateOf("Izvēlēties failus") }
     var selectedUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
@@ -179,6 +169,36 @@ private fun DocumentImportContent(
     var currentPageIndex by rememberSaveable(selectedUris) { mutableIntStateOf(0) }
     val pageRotations = remember(selectedUris) { mutableStateMapOf<Int, Float>() }
     var currentBitmap by remember { mutableStateOf<Bitmap?>(null) }
+
+    // Function to execute OCR scan for active page and rotation
+    fun executeOcrForPage(bmp: Bitmap?, rotation: Float, pageIndex: Int) {
+        if (bmp == null || isOcrProcessing) return
+
+        isOcrProcessing = true
+        val rotatedBitmap = DocumentPreviewHelper.rotateBitmap(bmp, rotation)
+        val base64Image = DocumentPreviewHelper.bitmapToBase64(rotatedBitmap)
+
+        val ocrTask = OCRAsyncTask(
+            mApiKey = mApiKey,
+            isOverlayRequired = true,
+            mImageDataOrUrl = base64Image,
+            mLanguage = "eng",
+            mIOCRCallBack = object : IOCRCallBack {
+                override fun getOCRCallBackResult(response: String?) {
+                    isOcrProcessing = false
+                    val statusLog = parseAndApplyOcrToRawRows(
+                        response = response,
+                        activePreset = activePreset,
+                        rawRowsList = rawRowsList,
+                        currentPageNum = pageIndex + 1,
+                        rotationAngle = rotation
+                    )
+                    onOcrNotesChange(statusLog)
+                }
+            }
+        )
+        ocrTask.execute()
+    }
 
     // Render bitmap when active page index changes & run automatic blue header detection
     LaunchedEffect(currentPageIndex, pageReferences) {
@@ -198,9 +218,16 @@ private fun DocumentImportContent(
         }
     }
 
+    // AUTOMATIC OCR TRIGGER: When skipManualCheck is enabled, automatically execute OCR as soon as page bitmap & rotation are ready
+    val currentRotation = pageRotations[currentPageIndex] ?: 0f
+    LaunchedEffect(currentPageIndex, currentBitmap, currentRotation, skipManualCheck) {
+        if (skipManualCheck && currentBitmap != null && selectedUris.isNotEmpty() && !isOcrProcessing) {
+            executeOcrForPage(currentBitmap, currentRotation, currentPageIndex)
+        }
+    }
+
     // Dropdown visibility states
     var processDropdownExpanded by remember { mutableStateOf(false) }
-    var confirmDropdownExpanded by remember { mutableStateOf(false) }
     var isOcrNotesExpanded by rememberSaveable { mutableStateOf(false) }
 
     LazyColumn(
@@ -289,43 +316,27 @@ private fun DocumentImportContent(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // Apstiprināšana dropdown
-                    Box(modifier = Modifier.fillMaxWidth()) {
-                        OutlinedTextField(
-                            value = confirmationMode,
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Apstiprināšana") },
-                            trailingIcon = {
-                                Text(
-                                    text = "▼",
-                                    modifier = Modifier
-                                        .padding(end = 12.dp)
-                                        .clickable { confirmDropdownExpanded = !confirmDropdownExpanded },
-                                    fontSize = 12.sp
-                                )
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { confirmDropdownExpanded = !confirmDropdownExpanded }
+                    // CHECKBOX: Skip manual verification dialog if rotation is correct (enabled by default)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { skipManualCheck = !skipManualCheck }
+                            .padding(vertical = 4.dp)
+                    ) {
+                        Checkbox(
+                            checked = skipManualCheck,
+                            onCheckedChange = { skipManualCheck = it }
                         )
-                        DropdownMenu(
-                            expanded = confirmDropdownExpanded,
-                            onDismissRequest = { confirmDropdownExpanded = false }
-                        ) {
-                            listOf("Tikai zem 80% OCR pārliecības", "Neprasīt apstiprinājumu").forEach { mode ->
-                                DropdownMenuItem(
-                                    text = { Text(mode) },
-                                    onClick = {
-                                        confirmationMode = mode
-                                        confirmDropdownExpanded = false
-                                    }
-                                )
-                            }
-                        }
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Izlaist manuālo pārbaudi dialogā, ja orientācija ir pareiza (noklusējums)",
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     // File picker launcher
                     val filePickerLauncher = rememberLauncherForActivityResult(
@@ -363,51 +374,35 @@ private fun DocumentImportContent(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Submit button "Nolasīt dokumentus"
-                    Button(
-                        onClick = {
-                            if (selectedFilesCount == 0 && selectedUris.isEmpty()) {
-                                Toast.makeText(context, "Lūdzu, vispirms pievienojiet dokumentus (uzklikšķiniet uz failu pogas)", Toast.LENGTH_LONG).show()
-                                return@Button
-                            }
-
-                            isOcrProcessing = true
-                            Toast.makeText(context, "Uzsākta OCR.space tabulas analīze...", Toast.LENGTH_SHORT).show()
-
-                            val rawBitmap = currentBitmap
-                            val currentRotation = pageRotations[currentPageIndex] ?: 0f
-
-                            val base64Image = if (rawBitmap != null) {
-                                val rotatedBitmap = DocumentPreviewHelper.rotateBitmap(rawBitmap, currentRotation)
-                                DocumentPreviewHelper.bitmapToBase64(rotatedBitmap)
-                            } else null
-
-                            val ocrTask = OCRAsyncTask(
-                                mApiKey = mApiKey,
-                                isOverlayRequired = true,
-                                mImageDataOrUrl = base64Image,
-                                mLanguage = "eng",
-                                mIOCRCallBack = object : IOCRCallBack {
-                                    override fun getOCRCallBackResult(response: String?) {
-                                        isOcrProcessing = false
-                                        val statusLog = parseAndApplyOcrToRawRows(
-                                            response = response,
-                                            activePreset = activePreset,
-                                            selectedProcess = selectedProcess,
-                                            rawRowsList = rawRowsList,
-                                            currentPageNum = currentPageIndex + 1,
-                                            rotationAngle = currentRotation
-                                        )
-                                        onOcrNotesChange(statusLog)
-                                    }
-                                }
+                    // If skipManualCheck is enabled, OCR runs automatically. If disabled, show manual trigger button.
+                    if (skipManualCheck) {
+                        Surface(
+                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = if (isOcrProcessing) "⚡ Apstrādā OCR tabulas datus..." else "⚡ Automātiskā nolasīšana aktīva (OCR iedarbināsies automātiski, izvēloties vai pagriežot lapu)",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.padding(12.dp)
                             )
-                            ocrTask.execute()
-                        },
-                        enabled = !isOcrProcessing,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(text = if (isOcrProcessing) "Apstrādā OCR..." else "Nolasīt dokumentu ar OCR.space API")
+                        }
+                    } else {
+                        Button(
+                            onClick = {
+                                if (selectedFilesCount == 0 && selectedUris.isEmpty()) {
+                                    Toast.makeText(context, "Lūdzu, vispirms pievienojiet dokumentus (uzklikšķiniet uz failu pogas)", Toast.LENGTH_LONG).show()
+                                    return@Button
+                                }
+                                executeOcrForPage(currentBitmap, currentRotation, currentPageIndex)
+                            },
+                            enabled = !isOcrProcessing,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(text = if (isOcrProcessing) "Apstrādā OCR..." else "Nolasīt dokumentu ar OCR.space API")
+                        }
                     }
                 }
             }
@@ -422,8 +417,6 @@ private fun DocumentImportContent(
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f))
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        val currentRotation = pageRotations[currentPageIndex] ?: 0f
-
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -714,7 +707,7 @@ private fun DocumentImportContent(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
-                                        text = "Vēl nav skenētu datu. Augšupielādē dokumentu vai pievieno rindu.",
+                                        text = "Vēl nav skenētu datu. Augšupielādē dokumentu un spied 'Nolasīt dokumentu'.",
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         fontSize = 14.sp,
                                         textAlign = TextAlign.Center
@@ -996,102 +989,6 @@ private fun ExcelExportTabContent(
     }
 }
 
-// Create sample raw rows for initial preset state
-private fun createSampleRawRows(selectedProcess: String, activePreset: TablePreset?): List<RawScannedRow> {
-    val list = mutableListOf<RawScannedRow>()
-
-    when {
-        selectedProcess.contains("Audzē") -> {
-            val r1 = RawScannedRow()
-            r1.setCell("date", "03/07/2026")
-            r1.setCell("operator", "VŠ")
-            r1.setCell("project", "Kolonnu apdare T3")
-            r1.setCell("thickness", "120")
-            r1.setCell("width", "240")
-            r1.setCell("outgoing_m", "15.0")
-            r1.setCell("amount", "5")
-            r1.setCell("comments", "1001(OK)")
-            list.add(r1)
-
-            val r2 = RawScannedRow()
-            r2.setCell("date", "06/07/2026")
-            r2.setCell("operator", "GR")
-            r2.setCell("project", "Kolonnu apdare T3")
-            r2.setCell("thickness", "120")
-            r2.setCell("width", "240")
-            r2.setCell("outgoing_m", "35.0")
-            r2.setCell("amount", "10")
-            r2.setCell("comments", "1002(OK)")
-            list.add(r2)
-
-            val r3 = RawScannedRow()
-            r3.setCell("date", "07/07/2026")
-            r3.setCell("operator", "VŠ")
-            r3.setCell("project", "Kolonnu apdare T3")
-            r3.setCell("thickness", "120")
-            r3.setCell("width", "240")
-            r3.setCell("outgoing_m", "1.25")
-            r3.setCell("amount", "3")
-            r3.setCell("comments", "1003(OK)")
-            list.add(r3)
-        }
-        selectedProcess.contains("Vakuum") -> {
-            val r1 = RawScannedRow()
-            r1.setCell("date", "06/07/2026")
-            r1.setCell("operator", "VŠ")
-            r1.setCell("master", "10")
-            r1.setCell("project", "Kolonnu apdare T3")
-            r1.setCell("layers", "5 slāņi")
-            r1.setCell("long_width", "200")
-            r1.setCell("long_count", "12")
-            list.add(r1)
-
-            val r2 = RawScannedRow()
-            r2.setCell("date", "06/07/2026")
-            r2.setCell("operator", "GR")
-            r2.setCell("master", "11")
-            r2.setCell("project", "Kolonnu apdare T3")
-            r2.setCell("layers", "5 slāņi")
-            r2.setCell("long_width", "200")
-            r2.setCell("long_count", "14")
-            list.add(r2)
-        }
-        else -> {
-            val r1 = RawScannedRow()
-            r1.setCell("date", "01.07.2026.")
-            r1.setCell("operator", "VŠ")
-            r1.setCell("project", "R16_Draugu 1")
-            r1.setCell("master", "4")
-            r1.setCell("cnc_start", "08:00")
-            r1.setCell("cnc_end", "12:00")
-            r1.setCell("double_sided", "jā")
-            list.add(r1)
-
-            val r2 = RawScannedRow()
-            r2.setCell("date", "02.07.2026.")
-            r2.setCell("operator", "GR")
-            r2.setCell("project", "R16_Draugu 1")
-            r2.setCell("master", "Brusas")
-            r2.setCell("cnc_start", "12:30")
-            r2.setCell("cnc_end", "14:00")
-            r2.setCell("double_sided", "nē")
-            list.add(r2)
-
-            val r3 = RawScannedRow()
-            r3.setCell("date", "03.07.2026.")
-            r3.setCell("operator", "VŠ")
-            r3.setCell("project", "R16_Draugu 2")
-            r3.setCell("master", "Brusas")
-            r3.setCell("cnc_start", "14:15")
-            r3.setCell("cnc_end", "16:00")
-            r3.setCell("double_sided", "nē")
-            list.add(r3)
-        }
-    }
-
-    return list
-}
-
 // Generate the 7-column export data and file name <date><production_step>.xlsx from verified raw rows
 private fun generateExcelImportDataFromRaw(
     rawRowsList: List<RawScannedRow>,
@@ -1185,11 +1082,10 @@ private fun generateExcelImportDataFromRaw(
     return Pair(fileName, exportRows)
 }
 
-// Parse OCR.space response and map to preset columns in rawRowsList
+// Parse actual OCR.space response text and map line tokens to preset columns in rawRowsList
 private fun parseAndApplyOcrToRawRows(
     response: String?,
     activePreset: TablePreset?,
-    selectedProcess: String,
     rawRowsList: MutableList<RawScannedRow>,
     currentPageNum: Int,
     rotationAngle: Float
@@ -1197,9 +1093,7 @@ private fun parseAndApplyOcrToRawRows(
     val rotationInfo = "Lapa $currentPageNum (Orientācija: ${rotationAngle.toInt()}°)"
 
     if (response.isNullOrBlank()) {
-        val sampleList = createSampleRawRows(selectedProcess, activePreset)
-        rawRowsList.addAll(sampleList)
-        return "OCR.space atbilde ir tukša. [$rotationInfo]\nPievienotas parauga rindas ar preseta '${activePreset?.taskName ?: selectedProcess}' struktūru."
+        return "OCR.space atbilde ir tukša. [$rotationInfo]\nNav nolasīti dati no dokumenta."
     }
 
     try {
@@ -1207,19 +1101,69 @@ private fun parseAndApplyOcrToRawRows(
         val isErrored = json.optBoolean("IsErroredOnProcessing", false)
         if (isErrored) {
             val errorMsg = json.optJSONArray("ErrorMessage")?.optString(0) ?: "Nezināma OCR kļūda"
-            val sampleList = createSampleRawRows(selectedProcess, activePreset)
-            rawRowsList.addAll(sampleList)
-            return "OCR.space Kļūda [$rotationInfo]: $errorMsg.\nPiemēroti parauga dati ar preseta struktūru."
+            return "OCR.space Kļūda [$rotationInfo]: $errorMsg."
         }
 
-        val sampleList = createSampleRawRows(selectedProcess, activePreset)
-        rawRowsList.addAll(sampleList)
-        return "OCR.space sekmīgi apstrādāja dokumentu [$rotationInfo]!\nDati ielādēti tabulā. Lūdzu, pārbaudiet un rediģējiet šūnas pirms ģenerēšanas."
+        val parsedResults = json.optJSONArray("ParsedResults")
+        if (parsedResults == null || parsedResults.length() == 0) {
+            return "OCR.space atbilde nesatur ParsedResults."
+        }
+
+        val firstResult = parsedResults.getJSONObject(0)
+        val parsedText = firstResult.optString("ParsedText", "")
+
+        if (parsedText.isBlank()) {
+            return "OCR.space nespēja nolasīt tekstu no dokumenta [$rotationInfo]."
+        }
+
+        val columns = activePreset?.columns ?: emptyList()
+        val lines = parsedText.split("\r\n", "\n").map { it.trim() }.filter { it.isNotBlank() }
+
+        var addedCount = 0
+
+        for (line in lines) {
+            // Filter out document header row so it doesn't get inserted as a data row
+            val isHeaderRow = line.contains("Dat", ignoreCase = true) ||
+                    line.contains("Operat", ignoreCase = true) ||
+                    line.contains("Proj", ignoreCase = true) ||
+                    line.contains("Biez", ignoreCase = true) ||
+                    line.contains("Plat", ignoreCase = true) ||
+                    line.contains("Master", ignoreCase = true) ||
+                    line.contains("Apstrādes", ignoreCase = true) ||
+                    line.contains("sākšanas", ignoreCase = true) ||
+                    line.contains("Task", ignoreCase = true)
+
+            if (isHeaderRow) {
+                continue // Skip document header row
+            }
+
+            // Split line by tabs or multiple spaces
+            val tokens = line.split(Regex("\t|\\s{2,}")).map { it.trim() }.filter { it.isNotEmpty() }
+            if (tokens.isEmpty()) continue
+
+            val newRow = RawScannedRow()
+
+            // Map tokens to active preset columns
+            tokens.forEachIndexed { tokenIdx, tokenText ->
+                if (tokenIdx < columns.size) {
+                    val col = columns[tokenIdx]
+                    newRow.setCell(col.role, tokenText)
+                    newRow.setCell(col.sourceHeader, tokenText)
+                }
+            }
+
+            rawRowsList.add(newRow)
+            addedCount++
+        }
+
+        return if (addedCount > 0) {
+            "OCR.space sekmīgi nolasīja $addedCount rindas [$rotationInfo]!\nDati ielādēti tabulā. Lūdzu, pārbaudiet un rediģējiet šūnas pirms ģenerēšanas."
+        } else {
+            "OCR.space nolasīja tekstu, bet netika identificēta neviena datu rinda [$rotationInfo]."
+        }
 
     } catch (e: Exception) {
-        val sampleList = createSampleRawRows(selectedProcess, activePreset)
-        rawRowsList.addAll(sampleList)
-        return "OCR atbildes parsēšanas kļūda (${e.localizedMessage}) [$rotationInfo]. Pievienotas preseta parauga rindas."
+        return "OCR atbildes parsēšanas kļūda (${e.localizedMessage}) [$rotationInfo]."
     }
 }
 

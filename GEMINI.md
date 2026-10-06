@@ -45,7 +45,12 @@ app/src/main/java/com/example/myapplication/
 
 ### 1. Import Workflow & Sub-Tabs (`ImportScreen.kt`)
 The Import screen is structured into three dedicated sub-tabs:
-1. **`Dokumentu apstrāde`** (Document Processing): Upload PDFs/images, preview & rotate pages, trigger OCR, and **manually verify/edit all raw scanned rows** in the editable spreadsheet table. Contains the **"Ģenerēt importu"** button at the bottom.
+1. **`Dokumentu apstrāde`** (Document Processing):
+   - Upload PDFs/images, preview & rotate pages (with automatic blue header rotation detection).
+   - Contains a checkbox: *"Izlaist manuālo pārbaudi, ja orientācija ir pareiza"* (enabled by default).
+   - Triggers OCR.space scanning. **Document header rows are automatically filtered out** to prevent duplication with preset UI headers.
+   - Operators **manually verify & edit all raw scanned rows** in the editable spreadsheet table.
+   - Contains the **"Ģenerēt importu"** action button at the bottom.
 2. **`Lejupielādēt Excel importu`** (Download Excel Import): Displays the generated 7-column summary table and file name preview (`<date><production_step>.xlsx`), with a download action button.
 3. **`Tabulu Preseti`** (Table Presets): Configure table structures, headers, data types, and mapping rules.
 
@@ -54,7 +59,7 @@ The Import screen is structured into three dedicated sub-tabs:
 ### 2. Raw Scanned Columns & Visual Color Focus
 
 Operators edit the full set of raw scanned columns for each process step in Tab 1 before generating the import file.
-When switching the process step dropdown, if the table is empty, the table headers and initial rows automatically update to match the active preset's column structure.
+When switching the process step dropdown, if the table is empty, the table headers automatically update to match the active preset's column structure.
 
 #### Column Color Coding Scheme:
 - **Group 1 (Import - Pink `#FFEEF0`):** Critical identity fields (`Datums`, `Operat.`, `Proj.Nr.`).
