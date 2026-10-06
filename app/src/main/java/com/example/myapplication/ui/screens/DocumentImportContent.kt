@@ -37,6 +37,7 @@ import com.example.myapplication.dependancy.IOCRCallBack
 import com.example.myapplication.dependancy.OCRAsyncTask
 import com.example.myapplication.models.RawScannedRow
 import com.example.myapplication.models.TablePreset
+import com.example.myapplication.repository.PresetRepository
 import com.example.myapplication.utils.ImportProcessor
 
 @Composable
@@ -73,7 +74,7 @@ fun DocumentImportContent(
     val pageRotations = remember(selectedUris) { mutableStateMapOf<Int, Float>() }
     var currentBitmap by remember { mutableStateOf<Bitmap?>(null) }
 
-    // Function to execute OCR scan for active page and rotation
+    // Function to execute OCR scan for active page and rotation (full rotated image sent without cropping)
     fun executeOcrForPage(bmp: Bitmap?, rotation: Float, pageIndex: Int) {
         if (bmp == null || isOcrProcessing) return
 
@@ -85,7 +86,7 @@ fun DocumentImportContent(
             mApiKey = mApiKey,
             isOverlayRequired = true,
             mImageDataOrUrl = base64Image,
-            mLanguage = "eng",
+            mLanguage = "lat",
             mIOCRCallBack = object : IOCRCallBack {
                 override fun getOCRCallBackResult(response: String?) {
                     isOcrProcessing = false
@@ -233,7 +234,7 @@ fun DocumentImportContent(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "Izlaist orientācijas pārbaudi",
+                            text = "Izlaist manuālo pārbaudi dialogā, ja orientācija ir pareiza (noklusējums)",
                             fontSize = 13.sp,
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -285,7 +286,7 @@ fun DocumentImportContent(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
-                                text = if (isOcrProcessing) "⚡ Apstrādā OCR tabulas datus..." else "⚡ Automātiski nolasīs dokumentus kad izvēlēsies failu",
+                                text = if (isOcrProcessing) "⚡ Apstrādā OCR Engine 3 tabulas datus..." else "⚡ Automātiskā nolasīšana aktīva (OCR Engine 3 iedarbināsies automātiski)",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -304,7 +305,7 @@ fun DocumentImportContent(
                             enabled = !isOcrProcessing,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text(text = if (isOcrProcessing) "Apstrādā OCR..." else "Nolasīt dokumentu ar OCR.space API")
+                            Text(text = if (isOcrProcessing) "Apstrādā OCR..." else "Nolasīt dokumentu ar OCR.space API (Engine 3)")
                         }
                     }
                 }
@@ -459,7 +460,7 @@ fun DocumentImportContent(
 
                         Spacer(modifier = Modifier.height(14.dp))
 
-                        // PREVIEW IMAGE BOX (MAX WIDTH SCREEN)
+                        // FULL PAGE PREVIEW (MAX WIDTH SCREEN)
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()

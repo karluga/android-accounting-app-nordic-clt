@@ -2,6 +2,7 @@ package com.example.myapplication.utils
 
 import android.os.Environment
 import com.example.myapplication.models.ExcelExportRow
+import com.example.myapplication.models.PresetColumn
 import com.example.myapplication.models.RawScannedRow
 import com.example.myapplication.models.TablePreset
 import org.json.JSONObject
@@ -139,47 +140,57 @@ object ImportProcessor {
             }
 
             val columns = activePreset?.columns ?: emptyList()
-            val lines = parsedText.split("\r\n", "\n").map { it.trim() }.filter { it.isNotBlank() }
+            val rawLines = parsedText.split("\r\n", "\n").map { it.trim() }.filter { it.isNotBlank() }
+
+            // Filter out markdown divider lines (|---|---|---|)
+            val cleanLines = rawLines.filter {
+                !it.contains("|---|") && !it.contains("| ---") && !it.startsWith("|-")
+            }
+
+            // Drop the first 2 rows (title line and header column row)
+            val dataLines = if (cleanLines.size > 2) {
+                cleanLines.drop(2)
+            } else if (cleanLines.size > 1 && cleanLines[0].contains("|")) {
+                cleanLines.drop(1)
+            } else {
+                cleanLines
+            }
 
             var addedCount = 0
 
-            for (line in lines) {
-                // Filter out document header row so it doesn't get inserted as a data row
-                val isHeaderRow = line.contains("Dat", ignoreCase = true) ||
-                        line.contains("Operat", ignoreCase = true) ||
-                        line.contains("Proj", ignoreCase = true) ||
-                        line.contains("Biez", ignoreCase = true) ||
-                        line.contains("Plat", ignoreCase = true) ||
-                        line.contains("Master", ignoreCase = true) ||
-                        line.contains("Apstrādes", ignoreCase = true) ||
-                        line.contains("sākšanas", ignoreCase = true) ||
-                        line.contains("Task", ignoreCase = true)
-
-                if (isHeaderRow) {
-                    continue // Skip document header row
-                }
-
-                // Split line by tabs or multiple spaces
-                val tokens = line.split(Regex("\t|\\s{2,}")).map { it.trim() }.filter { it.isNotEmpty() }
-                if (tokens.isEmpty()) continue
+            for (line in dataLines) {
+                if (isHeaderLine(line)) continue
 
                 val newRow = RawScannedRow()
 
-                // Map tokens to active preset columns
-                tokens.forEachIndexed { tokenIdx, tokenText ->
-                    if (tokenIdx < columns.size) {
-                        val col = columns[tokenIdx]
-                        newRow.setCell(col.role, tokenText)
-                        newRow.setCell(col.sourceHeader, tokenText)
+                if (line.contains("|")) {
+                    // Pipe-delimited markdown table parsing (OCR Engine 3 output)
+                    val trimmedLine = line.trim().trimStart('|').trimEnd('|')
+                    val cellTokens = trimmedLine.split("|").map { it.trim() }
+
+                    cellTokens.forEachIndexed { colIdx, cellText ->
+                        if (colIdx < columns.size) {
+                            val col = columns[colIdx]
+                            newRow.setCell(col.role, cellText)
+                            newRow.setCell(col.sourceHeader, cellText)
+                        }
                     }
+                } else {
+                    // Fallback whitespace tokenization
+                    val tokens = line.split(Regex("\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
+                    if (tokens.isEmpty()) continue
+                    val mappedRow = mapTokensToPresetRow(tokens, columns)
+                    mappedRow.cells.forEach { (k, v) -> newRow.setCell(k, v) }
                 }
 
-                rawRowsList.add(newRow)
-                addedCount++
+                if (hasValidCellData(newRow)) {
+                    rawRowsList.add(newRow)
+                    addedCount++
+                }
             }
 
             return if (addedCount > 0) {
-                "OCR.space sekmīgi nolasīja $addedCount rindas [$rotationInfo]!\nDati ielādēti tabulā. Lūdzu, pārbaudiet un rediģējiet šūnas pirms ģenerēšanas.$jsonDebugInfo"
+                "OCR.space sekmīgi nolasīja $addedCount rindas [$rotationInfo]!\nDati ielādēti atsevišķās kolonnu šūnās. Lūdzu, pārbaudiet pirms ģenerēšanas.$jsonDebugInfo"
             } else {
                 "OCR.space nolasīja tekstu, bet netika identificēta neviena datu rinda [$rotationInfo].$jsonDebugInfo"
             }
@@ -187,6 +198,93 @@ object ImportProcessor {
         } catch (e: Exception) {
             return "OCR atbildes parsēšanas kļūda (${e.localizedMessage}) [$rotationInfo].$jsonDebugInfo"
         }
+    }
+
+    private fun isHeaderLine(line: String): Boolean {
+        val lLower = line.lowercase()
+        val isHeader = lLower.contains("audzē") || lLower.contains("vakuum") ||
+                lLower.contains("cnc") || lLower.contains("koka") ||
+                lLower.contains("konstrukcij") || lLower.contains("ražotn") ||
+                lLower.contains("worksheet") || lLower.contains("diefenbacher") ||
+                lLower.contains("dat. 20") || lLower.contains("operat.") ||
+                lLower.contains("proj. nr") || lLower.contains("biez.") ||
+                lLower.contains("plat.") || lLower.contains("ienākoš")
+
+        val hasRowDataValues = Regex("\\d{1,2}[./]\\d{1,2}").containsMatchIn(line) &&
+                (line.contains("VŠ", ignoreCase = true) || line.contains("GR", ignoreCase = true) || line.contains("UŠ", ignoreCase = true) || line.contains("OK", ignoreCase = true))
+
+        return isHeader && !hasRowDataValues
+    }
+
+    private fun hasValidCellData(row: RawScannedRow): Boolean {
+        return row.cells.values.any { it.isNotBlank() }
+    }
+
+    private fun mapTokensToPresetRow(
+        tokens: List<String>,
+        columns: List<PresetColumn>
+    ): RawScannedRow {
+        val newRow = RawScannedRow()
+        if (tokens.isEmpty() || columns.isEmpty()) return newRow
+
+        var tokenIdx = 0
+        val totalTokens = tokens.size
+
+        // 1. Date token (Col 0)
+        if (tokenIdx < totalTokens) {
+            val dateCol = columns.firstOrNull { it.role == "date" } ?: columns.getOrNull(0)
+            if (dateCol != null) {
+                val dateVal = tokens[tokenIdx++]
+                newRow.setCell(dateCol.role, dateVal)
+                newRow.setCell(dateCol.sourceHeader, dateVal)
+            }
+        }
+
+        // 2. Operator token (Col 1)
+        if (tokenIdx < totalTokens) {
+            val opCol = columns.firstOrNull { it.role == "operator" } ?: columns.getOrNull(1)
+            if (opCol != null) {
+                val opVal = tokens[tokenIdx++]
+                newRow.setCell(opCol.role, opVal)
+                newRow.setCell(opCol.sourceHeader, opVal)
+            }
+        }
+
+        // 3. Project name (Col 2) - consume non-numeric tokens until a number is encountered
+        val projectCol = columns.firstOrNull { it.role == "project" } ?: columns.getOrNull(2)
+        val projectTokens = mutableListOf<String>()
+        while (tokenIdx < totalTokens) {
+            val tok = tokens[tokenIdx]
+            val isNumber = tok.replace(".", "").replace(",", "").all { it.isDigit() }
+            val isOkMarking = tok.contains("(OK)", ignoreCase = true) || tok.contains("OK", ignoreCase = true)
+
+            if ((isNumber || isOkMarking) && projectTokens.isNotEmpty()) {
+                break
+            }
+            projectTokens.add(tok)
+            tokenIdx++
+        }
+
+        if (projectCol != null && projectTokens.isNotEmpty()) {
+            val projectVal = projectTokens.joinToString(" ")
+            newRow.setCell(projectCol.role, projectVal)
+            newRow.setCell(projectCol.sourceHeader, projectVal)
+        }
+
+        // 4. Remaining numeric & comment tokens
+        val remainingCols = columns.filter { col ->
+            col.role !in listOf("date", "operator", "project")
+        }
+
+        var colIdx = 0
+        while (tokenIdx < totalTokens && colIdx < remainingCols.size) {
+            val tok = tokens[tokenIdx++]
+            val col = remainingCols[colIdx++]
+            newRow.setCell(col.role, tok)
+            newRow.setCell(col.sourceHeader, tok)
+        }
+
+        return newRow
     }
 
     fun saveExcelImportFile(fileName: String, exportRows: List<ExcelExportRow>): String? {

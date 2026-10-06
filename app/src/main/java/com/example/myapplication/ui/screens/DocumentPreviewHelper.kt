@@ -198,6 +198,55 @@ object DocumentPreviewHelper {
     }
 
     /**
+     * Crops the top header / title section (containing the blue header band and table title)
+     * AFTER document positioning and rotation, returning a clean Bitmap with data rows.
+     */
+    fun cropBelowBlueHeader(bitmap: Bitmap): Bitmap {
+        val width = bitmap.width
+        val height = bitmap.height
+        if (width <= 0 || height <= 0) return bitmap
+
+        var maxBlueY = 0
+        val maxScanHeight = (height * 0.35f).toInt()
+        val stepX = (width / 80).coerceAtLeast(1)
+        val hsv = FloatArray(3)
+
+        for (y in 0 until maxScanHeight step 2) {
+            var blueCountInRow = 0
+            for (x in 0 until width step stepX) {
+                val pixel = bitmap.getPixel(x, y)
+                Color.colorToHSV(pixel, hsv)
+                if (hsv[0] in 165.0f..255.0f && hsv[1] >= 0.18f && hsv[2] >= 0.20f) {
+                    blueCountInRow++
+                }
+            }
+            if (blueCountInRow > 4) {
+                maxBlueY = y
+            }
+        }
+
+        // If blue header band was found in top 35%, crop starting below it
+        if (maxBlueY > 10) {
+            val startY = (maxBlueY + 18).coerceAtMost(height - 60)
+            val croppedHeight = height - startY
+            if (croppedHeight > 100) {
+                Log.d(TAG, "Cropped below blue header at Y=$startY (new height $croppedHeight)")
+                return Bitmap.createBitmap(bitmap, 0, startY, width, croppedHeight)
+            }
+        }
+
+        // Fallback: If no blue pixels found, crop top 15% (which contains title/headers)
+        val fallbackStartY = (height * 0.15f).toInt()
+        val fallbackHeight = height - fallbackStartY
+        if (fallbackHeight > 100) {
+            Log.d(TAG, "Fallback cropped top 15% at Y=$fallbackStartY (new height $fallbackHeight)")
+            return Bitmap.createBitmap(bitmap, 0, fallbackStartY, width, fallbackHeight)
+        }
+
+        return bitmap
+    }
+
+    /**
      * Rotates a Bitmap by degrees (e.g., 90, 180, 270).
      */
     fun rotateBitmap(source: Bitmap, degrees: Float): Bitmap {

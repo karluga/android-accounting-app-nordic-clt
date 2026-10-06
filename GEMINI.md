@@ -4,7 +4,7 @@
 This project is an **Android Timber Production & Accounting Management Application** ("Nordic CLT Accounting App"). It is designed for timber manufacturing and processing plants (e.g., CLT/Glulam production steps such as *Audzēšana/Finger-jointing*, *Vakuumprese/Vacuum Press*, and *CNC processing*).
 
 The application enables plant managers and operators to:
-1. **Digitize Worksheets via OCR:** Scan or upload PDF/image production sheets, automatically extracting raw tabular rows using OCR (OCR.space API) combined with pre-defined table presets.
+1. **Digitize Worksheets via OCR:** Scan or upload PDF/image production sheets, automatically extracting raw tabular rows using OCR (OCR.space API with `OCREngine=3`) combined with pre-defined table presets.
 2. **Manually Verify & Edit Raw Rows:** Verify and edit all individual scanned columns in an interactive spreadsheet table with color-coded column focus before generating the import file.
 3. **Manage Table Presets & Rules:** Define custom table structures, column headers, data types (date, float, int, enum), validation rules, and output mappings for each production stage.
 4. **Generate & Download Excel Imports:** Convert verified raw rows into a daily 7-column import file named `<date><production_step>.xlsx`.
@@ -20,7 +20,7 @@ app/src/main/java/com/example/myapplication/
 ├── MainActivity.kt                # Main container with NavigationSuiteScaffold
 ├── dependancy/
 │   ├── IORCCallBack.kt            # Interface for OCR API async results
-│   └── OCRAsyncTask.kt            # AsyncTask / HTTP POST client for OCR.space API
+│   └── OCRAsyncTask.kt            # AsyncTask / HTTP POST client for OCR.space API (OCREngine=3)
 ├── models/
 │   ├── DataModels.kt              # RawScannedRow, ProductionRow, PendingReviewField, EmployeeSalaryData
 │   └── PresetModels.kt            # TablePreset, PresetColumn JSON serializable models
@@ -31,7 +31,7 @@ app/src/main/java/com/example/myapplication/
 │   ├── screens/
 │   │   ├── ImportScreen.kt        # Combined screen with sub-tabs: "Dokumentu apstrāde", "Lejupielādēt Excel importu", "Tabulu Preseti"
 │   │   ├── PresetsTab.kt          # Preset Editor UI (Manage presets, task names, columns, rules)
-│   │   ├── DocumentPreviewHelper.kt # Native PDF/Image rendering, page navigation & blue header rotation detection
+│   │   ├── DocumentPreviewHelper.kt # Native PDF/Image rendering, blue header rotation detection & post-positioning cropping
 │   │   ├── SalariesScreen.kt      # Employee salary calculation & metrics summary
 │   │   └── AutomaticPaymentsScreen.kt # Payment scheduling & automated processing
 │   └── theme/                     # Compose Material 3 styling & typography
@@ -47,8 +47,10 @@ app/src/main/java/com/example/myapplication/
 The Import screen is structured into three dedicated sub-tabs:
 1. **`Dokumentu apstrāde`** (Document Processing):
    - Upload PDFs/images, preview & rotate pages (with automatic blue header rotation detection).
+   - **Post-Positioning Cropping:** After rotation positioning, the blue header/title band is automatically cropped off (`DocumentPreviewHelper.cropBelowBlueHeader`) before sending the image to OCR.space API (`OCREngine=3`), isolating data table rows.
    - Contains a checkbox: *"Izlaist manuālo pārbaudi, ja orientācija ir pareiza"* (enabled by default).
-   - Triggers OCR.space scanning. **Document header rows are automatically filtered out** to prevent duplication with preset UI headers.
+   - Triggers OCR.space scanning automatically on page/orientation readiness.
+   - **Table Title & Column Header Filtering:** OCR response lines matching table title or header keywords are automatically filtered out (`ImportProcessor`) so only clean data rows populate the table.
    - Operators **manually verify & edit all raw scanned rows** in the editable spreadsheet table.
    - Contains the **"Ģenerēt importu"** action button at the bottom.
 2. **`Lejupielādēt Excel importu`** (Download Excel Import): Displays the generated 7-column summary table and file name preview (`<date><production_step>.xlsx`), with a download action button.
@@ -65,50 +67,6 @@ When switching the process step dropdown, if the table is empty, the table heade
 - **Group 1 (Import - Pink `#FFEEF0`):** Critical identity fields (`Datums`, `Operat.`, `Proj.Nr.`).
 - **Group 2 (Calculations - Lilac `#EFE6FF`):** Fields used for m³ and master calculations.
 - **Group 3 (Secondary - Dark `#1E1E24`):** Secondary operational fields (time stamps, panel types, comments).
-
-#### Complete Raw Column Lists per Step:
-
-- **Diefenbacher (1. Audzētājs):**
-  1. `Dat. 2026` (Group 1 - Pink)
-  2. `Operat.` (Group 1 - Pink)
-  3. `Proj.Nr.` (Group 1 - Pink)
-  4. `Apstrādes sākšanas laiks` (Group 3 - Dark)
-  5. `Biez.` (Group 2 - Lilac)
-  6. `Plat.` (Group 2 - Lilac)
-  7. `Ienākošie metri` (Group 3 - Dark)
-  8. `Izejošie metri` (Group 2 - Lilac)
-  9. `gb.` (Group 2 - Lilac)
-  10. `Apstrādes beigšanas laiks` (Group 3 - Dark)
-  11. `Panelis` (Group 3 - Dark)
-  12. `Slānis` (Group 3 - Dark)
-  13. `Dīkstāve un komentāri` (Group 2 - Lilac, contains master panel number e.g. `1001(OK)`)
-
-- **Vakuumprese (3. Vakuumprese):**
-  1. `Dat. 2026` (Group 1 - Pink)
-  2. `Operat.` (Group 1 - Pink)
-  3. `Mastera nr.` (Group 2 - Lilac)
-  4. `Proj. Nr.` (Group 1 - Pink)
-  5. `Apstrādes uzsākšanas laiks` (Group 3 - Dark)
-  6. `Slāņu skaits/biezumi` (Group 2 - Lilac)
-  7. `Garenvirziena dēļi - platums` (Group 2 - Lilac)
-  8. `Garenvirziena dēļi - skaits` (Group 2 - Lilac)
-  9. `Šķērsvirziena dēļi - platums` (Group 2 - Lilac)
-  10. `Šķērsvirziena dēļi - skaits` (Group 2 - Lilac)
-  11. `Apstrādes pabeigšanas laiks` (Group 3 - Dark)
-  12. `Dīkstāve un komentāri` (Group 3 - Dark)
-
-- **CNC (5. CNC):**
-  1. `Dat. 2026` (Group 1 - Pink)
-  2. `Operat.` (Group 1 - Pink)
-  3. `Projekta Nr.` (Group 1 - Pink)
-  4. `Mastera. nr.` (Group 2 - Lilac)
-  5. `Uzkraušana Sākta` (Group 3 - Dark)
-  6. `CNC sāk` (Group 2 - Lilac)
-  7. `CNC beidz` (Group 2 - Lilac)
-  8. `Nokraušana pabeigta` (Group 3 - Dark)
-  9. `Simulācijas laiks` (Group 3 - Dark)
-  10. `Divpusēja apstrāde (jā/nē)` (Group 2 - Lilac)
-  11. `Dīkstāve un komentāri` (Group 3 - Dark)
 
 ---
 
@@ -135,16 +93,11 @@ $$\text{<date>}\text{<production\_step>}\text{.xlsx}$$
 | 6 | `Related to` | text | Project code (e.g. `Kolonnu apdare T3`) | Project identity |
 | 7 | `Tips` | text | Always `Ražošana` | Entry type |
 
-#### Diefenbacher Calculation Rules:
-- The column `"Dīkstāve un komentāri"` contains master panel numbers.
-- **Finished Master Rule:** Only entries marked with **`(OK)`** (e.g. `1001(OK)`) are counted in `Kopā masteri`.
-- **m³ Calculation:** `Saražoti m3` is calculated from ALL manufactured entries for that day/project, while `Kopā masteri` counts only those marked `(OK)`.
-
 ---
 
 ## Technical Specifications
 - **Framework:** Jetpack Compose with Material 3 Adaptive Navigation Suite.
 - **Language:** Kotlin 2.x
 - **Min SDK:** 24 (Android 7.0) | **Target SDK:** 37
-- **Networking:** HTTPS Connection to OCR.space API (`https://api.ocr.space/parse/image`).
+- **Networking:** HTTPS Connection to OCR.space API (`https://api.ocr.space/parse/image`, `OCREngine=3`).
 - **Data Persistence:** Android Assets (`assets/presets.json`) + Internal File I/O (`filesDir`).

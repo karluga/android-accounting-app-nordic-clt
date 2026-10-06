@@ -50,7 +50,7 @@ class OCRAsyncTask(
                 apiKey = if (!mApiKey.isNullOrBlank()) mApiKey else BuildConfig.OCR_API_KEY,
                 isOverlayRequired = isOverlayRequired,
                 imageDataOrUrl = mImageDataOrUrl,
-                language = if (!mLanguage.isNullOrBlank()) mLanguage else "eng"
+                language = if (!mLanguage.isNullOrBlank()) mLanguage else "lat"
             )
         } catch (e: Exception) {
             Log.e(TAG, "OCR Request failed", e)
@@ -80,9 +80,9 @@ class OCRAsyncTask(
         postDataParams.put("isOverlayRequired", isOverlayRequired)
         postDataParams.put("language", language)
 
-        // Critical parameters for table reading
+        // Critical parameters for table reading - Engine 3 for superior tabular extraction
         postDataParams.put("isTable", true)
-        postDataParams.put("OCREngine", "2")
+        postDataParams.put("OCREngine", "3")
         postDataParams.put("scale", true)
 
         if (!imageDataOrUrl.isNullOrBlank()) {
