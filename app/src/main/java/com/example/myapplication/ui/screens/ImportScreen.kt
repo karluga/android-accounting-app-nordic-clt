@@ -36,10 +36,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import com.example.myapplication.dependancy.IOCRCallBack
 import com.example.myapplication.dependancy.OCRAsyncTask
-import com.example.myapplication.models.PendingReviewField
 import com.example.myapplication.models.ProductionRow
 import com.example.myapplication.models.TablePreset
 import com.example.myapplication.repository.PresetRepository
@@ -131,8 +129,6 @@ private fun DocumentImportContent(
     val mApiKey = "K89893470788957"
 
     // Form selections
-    var teachingMode by rememberSaveable { mutableStateOf(true) }
-    var confirmationMode by rememberSaveable { mutableStateOf("Tikai zem 80% OCR pārliecības") }
     var selectedFilesCount by rememberSaveable { mutableIntStateOf(0) }
     var selectedFilesNames by rememberSaveable { mutableStateOf("Izvēlēties failus") }
     var selectedUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
@@ -171,26 +167,12 @@ private fun DocumentImportContent(
 
     // Dropdown visibility states
     var processDropdownExpanded by remember { mutableStateOf(false) }
-    var confirmDropdownExpanded by remember { mutableStateOf(false) }
     var isOcrNotesExpanded by rememberSaveable { mutableStateOf(false) }
 
     // Retrieve active Preset based on selected process
     val activePreset = remember(selectedProcess) {
         PresetRepository.getPresetByTaskName(context, selectedProcess)
             ?: PresetRepository.getPreset(context, "diefenbacher")
-    }
-
-    // Handwriting verification queue state
-    val pendingFieldsQueue = remember { mutableStateListOf<PendingReviewField>() }
-    var currentReviewField by remember { mutableStateOf<PendingReviewField?>(null) }
-    var reviewDialogInputText by remember { mutableStateOf("") }
-
-    // Monitor queue changes to show current dialog
-    LaunchedEffect(pendingFieldsQueue.size) {
-        if (pendingFieldsQueue.isNotEmpty() && currentReviewField == null) {
-            currentReviewField = pendingFieldsQueue.removeAt(0)
-            reviewDialogInputText = currentReviewField?.currentValue ?: ""
-        }
     }
 
     LazyColumn(
@@ -277,44 +259,6 @@ private fun DocumentImportContent(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Apstiprināšana dropdown
-                    Box(modifier = Modifier.fillMaxWidth()) {
-                        OutlinedTextField(
-                            value = confirmationMode,
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Apstiprināšana") },
-                            trailingIcon = {
-                                Text(
-                                    text = "▼",
-                                    modifier = Modifier
-                                        .padding(end = 12.dp)
-                                        .clickable { confirmDropdownExpanded = !confirmDropdownExpanded },
-                                    fontSize = 12.sp
-                                )
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { confirmDropdownExpanded = !confirmDropdownExpanded }
-                        )
-                        DropdownMenu(
-                            expanded = confirmDropdownExpanded,
-                            onDismissRequest = { confirmDropdownExpanded = false }
-                        ) {
-                            listOf("Tikai zem 80% OCR pārliecības", "Neprasīt apstiprinājumu").forEach { mode ->
-                                DropdownMenuItem(
-                                    text = { Text(mode) },
-                                    onClick = {
-                                        confirmationMode = mode
-                                        confirmDropdownExpanded = false
-                                    }
-                                )
-                            }
-                        }
-                    }
-
                     Spacer(modifier = Modifier.height(16.dp))
 
                     // File picker launcher
@@ -386,10 +330,7 @@ private fun DocumentImportContent(
                                             response = response,
                                             activePreset = activePreset,
                                             selectedProcess = selectedProcess,
-                                            teachingMode = teachingMode,
-                                            confirmationMode = confirmationMode,
                                             rowsList = rowsList,
-                                            pendingFieldsQueue = pendingFieldsQueue,
                                             currentPageNum = currentPageIndex + 1,
                                             rotationAngle = currentRotation
                                         )
@@ -835,136 +776,6 @@ private fun DocumentImportContent(
             }
         }
     }
-
-    // HANDWRITING FIELD CHECK DIALOG
-    currentReviewField?.let { field ->
-        Dialog(onDismissRequest = { }) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
-                        Column {
-                            Text(
-                                text = "HANDWRITING CHECK",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.secondary,
-                                letterSpacing = 1.2.sp
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "Pārbaudi lauku",
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = field.progressText,
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(80.dp)
-                            .background(Color(0xFFFFFDE7), RoundedCornerShape(6.dp))
-                            .border(1.dp, Color(0xFFD4AC0D), RoundedCornerShape(6.dp)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                text = field.imagePrompt,
-                                fontFamily = FontFamily.Cursive,
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF1B4F72),
-                                textAlign = TextAlign.Center
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "[Skenētā lauka fragments]",
-                                fontSize = 10.sp,
-                                color = Color.Gray
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
-                        Text(
-                            text = "Lauka nosaukums: ${field.label}",
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    OutlinedTextField(
-                        value = reviewDialogInputText,
-                        onValueChange = { reviewDialogInputText = it },
-                        label = { Text("Vērtība") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
-                    ) {
-                        TextButton(
-                            onClick = {
-                                if (field.targetRowIndex < rowsList.size) {
-                                    rowsList.removeAt(field.targetRowIndex)
-                                    pendingFieldsQueue.clear()
-                                }
-                                Toast.makeText(context, "Rindas nolasīšana izlaista", Toast.LENGTH_SHORT).show()
-                                currentReviewField = null
-                            },
-                            colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
-                        ) {
-                            Text("Izlaist rindu")
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Button(
-                            onClick = {
-                                if (field.targetRowIndex < rowsList.size) {
-                                    val row = rowsList[field.targetRowIndex]
-                                    when (field.fieldKey) {
-                                        "date" -> row.date = reviewDialogInputText
-                                        "m3" -> row.m3 = reviewDialogInputText
-                                        "relatedTo" -> row.relatedTo = reviewDialogInputText
-                                    }
-                                    rowsList[field.targetRowIndex] = row.copy()
-                                }
-
-                                Toast.makeText(context, "Lauks apstiprināts", Toast.LENGTH_SHORT).show()
-                                currentReviewField = null
-                            }
-                        ) {
-                            Text("Apstiprināt")
-                        }
-                    }
-                }
-            }
-        }
-    }
 }
 
 @Composable
@@ -1340,10 +1151,7 @@ private fun parseAndApplyOcrResponse(
     response: String?,
     activePreset: TablePreset?,
     selectedProcess: String,
-    teachingMode: Boolean,
-    confirmationMode: String,
     rowsList: MutableList<ProductionRow>,
-    pendingFieldsQueue: MutableList<PendingReviewField>,
     currentPageNum: Int,
     rotationAngle: Float
 ): String {
@@ -1384,18 +1192,8 @@ private fun parseAndApplyOcrResponse(
             }
         }
 
-        // Apply confirmation / handwriting verification workflow
-        if (teachingMode) {
-            pendingFieldsQueue.clear()
-            pendingFieldsQueue.add(PendingReviewField("date", "Datums", newRow.date, "Skenēts datums: [${newRow.date}]", "Lauks 1 no 3", rowsList.size))
-            pendingFieldsQueue.add(PendingReviewField("m3", "Saražoti m3", newRow.m3, "Skenēts apjoms: [${newRow.m3}]", "Lauks 2 no 3", rowsList.size))
-            pendingFieldsQueue.add(PendingReviewField("relatedTo", "Related to (Projekta Nr.)", newRow.relatedTo, "Skenēts Proj. Nr: [${newRow.relatedTo}]", "Lauks 3 no 3", rowsList.size))
-            rowsList.add(newRow)
-            return "OCR.space sekmīgi apstrādāja dokumentu [$rotationInfo]. Presets '${activePreset?.taskName}' piesaistīts. Gaida lauku pārbaudi."
-        } else {
-            rowsList.add(newRow)
-            return "OCR.space analīze pabeigta [$rotationInfo]!\nDati kartēti pēc preseta '${activePreset?.taskName}' un pievienoti tabulai.\n\nRaw OCR response:\n$response"
-        }
+        rowsList.add(newRow)
+        return "OCR.space analīze pabeigta [$rotationInfo]!\nDati kartēti pēc preseta '${activePreset?.taskName}' un pievienoti tabulai.\n\nRaw OCR response:\n$response"
 
     } catch (e: Exception) {
         val mockRow = createMockRow(selectedProcess)

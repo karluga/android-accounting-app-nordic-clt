@@ -15,16 +15,6 @@ data class ProductionRow(
     var type: String = "Ražošana"
 )
 
-// Data class for fields that require handwriting/OCR validation
-data class PendingReviewField(
-    val fieldKey: String,
-    val label: String,
-    val currentValue: String,
-    val imagePrompt: String,
-    val progressText: String,
-    val targetRowIndex: Int
-)
-
 data class EmployeeSalaryData(
     val id: String,
     val name: String,
