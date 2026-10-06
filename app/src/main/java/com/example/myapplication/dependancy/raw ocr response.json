@@ -1,0 +1,1441 @@
+{
+  "ParsedResults": [
+    {
+      "TextOverlay": {
+        "Lines": [
+          {
+            "LineText": "Dat.",
+            "Words": [
+              {
+                "WordText": "Dat",
+                "Left": 98,
+                "Top": 108,
+                "Height": 22,
+                "Width": 51
+              },
+              {
+                "WordText": ".",
+                "Left": 98,
+                "Top": 108,
+                "Height": 22,
+                "Width": 51
+              }
+            ],
+            "MaxHeight": 22,
+            "MinTop": 108
+          },
+          {
+            "LineText": "2025",
+            "Words": [
+              {
+                "WordText": "2025",
+                "Left": 93,
+                "Top": 134,
+                "Height": 22,
+                "Width": 61
+              }
+            ],
+            "MaxHeight": 22,
+            "MinTop": 134
+          },
+          {
+            "LineText": "01.09",
+            "Words": [
+              {
+                "WordText": "01.09",
+                "Left": 86,
+                "Top": 205,
+                "Height": 32,
+                "Width": 78
+              }
+            ],
+            "MaxHeight": 32,
+            "MinTop": 205
+          },
+          {
+            "LineText": "Operat.",
+            "Words": [
+              {
+                "WordText": "Operat",
+                "Left": 188,
+                "Top": 125,
+                "Height": 24,
+                "Width": 86
+              },
+              {
+                "WordText": ".",
+                "Left": 188,
+                "Top": 125,
+                "Height": 24,
+                "Width": 86
+              }
+            ],
+            "MaxHeight": 24,
+            "MinTop": 125
+          },
+          {
+            "LineText": "Proj.",
+            "Words": [
+              {
+                "WordText": "Proj",
+                "Left": 308,
+                "Top": 117,
+                "Height": 24,
+                "Width": 61
+              },
+              {
+                "WordText": ".",
+                "Left": 308,
+                "Top": 117,
+                "Height": 24,
+                "Width": 61
+              }
+            ],
+            "MaxHeight": 24,
+            "MinTop": 117
+          },
+          {
+            "LineText": "Nr.",
+            "Words": [
+              {
+                "WordText": "Nr",
+                "Left": 314,
+                "Top": 143,
+                "Height": 28,
+                "Width": 48
+              },
+              {
+                "WordText": ".",
+                "Left": 314,
+                "Top": 143,
+                "Height": 28,
+                "Width": 48
+              }
+            ],
+            "MaxHeight": 28,
+            "MinTop": 143
+          },
+          {
+            "LineText": "R 30",
+            "Words": [
+              {
+                "WordText": "R",
+                "Left": 307,
+                "Top": 214,
+                "Height": 31,
+                "Width": 22
+              },
+              {
+                "WordText": "30",
+                "Left": 333,
+                "Top": 214,
+                "Height": 31,
+                "Width": 46
+              }
+            ],
+            "MaxHeight": 31,
+            "MinTop": 214
+          },
+          {
+            "LineText": "R30",
+            "Words": [
+              {
+                "WordText": "R30",
+                "Left": 301,
+                "Top": 272,
+                "Height": 39,
+                "Width": 67
+              }
+            ],
+            "MaxHeight": 39,
+            "MinTop": 272
+          },
+          {
+            "LineText": "R30",
+            "Words": [
+              {
+                "WordText": "R30",
+                "Left": 298,
+                "Top": 330,
+                "Height": 41,
+                "Width": 78
+              }
+            ],
+            "MaxHeight": 41,
+            "MinTop": 330
+          },
+          {
+            "LineText": "R30",
+            "Words": [
+              {
+                "WordText": "R30",
+                "Left": 298,
+                "Top": 393,
+                "Height": 32,
+                "Width": 68
+              }
+            ],
+            "MaxHeight": 32,
+            "MinTop": 393
+          },
+          {
+            "LineText": "R30",
+            "Words": [
+              {
+                "WordText": "R30",
+                "Left": 298,
+                "Top": 452,
+                "Height": 32,
+                "Width": 68
+              }
+            ],
+            "MaxHeight": 32,
+            "MinTop": 452
+          },
+          {
+            "LineText": "R 30",
+            "Words": [
+              {
+                "WordText": "R",
+                "Left": 296,
+                "Top": 511,
+                "Height": 32,
+                "Width": 20
+              },
+              {
+                "WordText": "30",
+                "Left": 319,
+                "Top": 511,
+                "Height": 32,
+                "Width": 50
+              }
+            ],
+            "MaxHeight": 32,
+            "MinTop": 511
+          },
+          {
+            "LineText": "R18II",
+            "Words": [
+              {
+                "WordText": "R18II",
+                "Left": 288,
+                "Top": 569,
+                "Height": 32,
+                "Width": 100
+              }
+            ],
+            "MaxHeight": 32,
+            "MinTop": 569
+          },
+          {
+            "LineText": "Apstrades",
+            "Words": [
+              {
+                "WordText": "Apstrades",
+                "Left": 403,
+                "Top": 107,
+                "Height": 24,
+                "Width": 113
+              }
+            ],
+            "MaxHeight": 24,
+            "MinTop": 107
+          },
+          {
+            "LineText": "saksanas",
+            "Words": [
+              {
+                "WordText": "saksanas",
+                "Left": 406,
+                "Top": 134,
+                "Height": 24,
+                "Width": 106
+              }
+            ],
+            "MaxHeight": 24,
+            "MinTop": 134
+          },
+          {
+            "LineText": "laiks",
+            "Words": [
+              {
+                "WordText": "laiks",
+                "Left": 428,
+                "Top": 164,
+                "Height": 22,
+                "Width": 59
+              }
+            ],
+            "MaxHeight": 22,
+            "MinTop": 164
+          },
+          {
+            "LineText": "08:50",
+            "Words": [
+              {
+                "WordText": "08",
+                "Left": 401,
+                "Top": 217,
+                "Height": 33,
+                "Width": 96
+              },
+              {
+                "WordText": ":",
+                "Left": 401,
+                "Top": 217,
+                "Height": 33,
+                "Width": 96
+              },
+              {
+                "WordText": "50",
+                "Left": 401,
+                "Top": 217,
+                "Height": 33,
+                "Width": 96
+              }
+            ],
+            "MaxHeight": 33,
+            "MinTop": 217
+          },
+          {
+            "LineText": "Biez.",
+            "Words": [
+              {
+                "WordText": "Biez",
+                "Left": 551,
+                "Top": 138,
+                "Height": 27,
+                "Width": 64
+              },
+              {
+                "WordText": ".",
+                "Left": 551,
+                "Top": 138,
+                "Height": 27,
+                "Width": 64
+              }
+            ],
+            "MaxHeight": 27,
+            "MinTop": 138
+          },
+          {
+            "LineText": "47",
+            "Words": [
+              {
+                "WordText": "47",
+                "Left": 544,
+                "Top": 228,
+                "Height": 30,
+                "Width": 71
+              }
+            ],
+            "MaxHeight": 30,
+            "MinTop": 228
+          },
+          {
+            "LineText": "47",
+            "Words": [
+              {
+                "WordText": "47",
+                "Left": 543,
+                "Top": 347,
+                "Height": 34,
+                "Width": 61
+              }
+            ],
+            "MaxHeight": 34,
+            "MinTop": 347
+          },
+          {
+            "LineText": "47",
+            "Words": [
+              {
+                "WordText": "47",
+                "Left": 543,
+                "Top": 406,
+                "Height": 32,
+                "Width": 61
+              }
+            ],
+            "MaxHeight": 32,
+            "MinTop": 406
+          },
+          {
+            "LineText": "47",
+            "Words": [
+              {
+                "WordText": "47",
+                "Left": 540,
+                "Top": 465,
+                "Height": 36,
+                "Width": 63
+              }
+            ],
+            "MaxHeight": 36,
+            "MinTop": 465
+          },
+          {
+            "LineText": "417",
+            "Words": [
+              {
+                "WordText": "417",
+                "Left": 541,
+                "Top": 521,
+                "Height": 36,
+                "Width": 67
+              }
+            ],
+            "MaxHeight": 36,
+            "MinTop": 521
+          },
+          {
+            "LineText": "47",
+            "Words": [
+              {
+                "WordText": "47",
+                "Left": 541,
+                "Top": 582,
+                "Height": 36,
+                "Width": 68
+              }
+            ],
+            "MaxHeight": 36,
+            "MinTop": 582
+          },
+          {
+            "LineText": "47",
+            "Words": [
+              {
+                "WordText": "47",
+                "Left": 545,
+                "Top": 629,
+                "Height": 50,
+                "Width": 67
+              }
+            ],
+            "MaxHeight": 50,
+            "MinTop": 629
+          },
+          {
+            "LineText": "Garuma audzešana (Diefenbacher)",
+            "Words": [
+              {
+                "WordText": "Garuma",
+                "Left": 617,
+                "Top": 60,
+                "Height": 37,
+                "Width": 110
+              },
+              {
+                "WordText": "audzešana",
+                "Left": 730,
+                "Top": 66,
+                "Height": 38,
+                "Width": 156
+              },
+              {
+                "WordText": "(",
+                "Left": 888,
+                "Top": 74,
+                "Height": 42,
+                "Width": 218
+              },
+              {
+                "WordText": "Diefenbacher",
+                "Left": 888,
+                "Top": 74,
+                "Height": 42,
+                "Width": 218
+              },
+              {
+                "WordText": ")",
+                "Left": 888,
+                "Top": 74,
+                "Height": 42,
+                "Width": 218
+              }
+            ],
+            "MaxHeight": 55,
+            "MinTop": 60
+          },
+          {
+            "LineText": "Plat.",
+            "Words": [
+              {
+                "WordText": "Plat",
+                "Left": 653,
+                "Top": 143,
+                "Height": 29,
+                "Width": 60
+              },
+              {
+                "WordText": ".",
+                "Left": 653,
+                "Top": 143,
+                "Height": 29,
+                "Width": 60
+              }
+            ],
+            "MaxHeight": 29,
+            "MinTop": 143
+          },
+          {
+            "LineText": "Tenakosie Izejosie",
+            "Words": [
+              {
+                "WordText": "Tenakosie",
+                "Left": 740,
+                "Top": 133,
+                "Height": 29,
+                "Width": 133
+              },
+              {
+                "WordText": "Izejosie",
+                "Left": 875,
+                "Top": 138,
+                "Height": 28,
+                "Width": 101
+              }
+            ],
+            "MaxHeight": 33,
+            "MinTop": 133
+          },
+          {
+            "LineText": "metri",
+            "Words": [
+              {
+                "WordText": "metri",
+                "Left": 765,
+                "Top": 166,
+                "Height": 20,
+                "Width": 66
+              }
+            ],
+            "MaxHeight": 20,
+            "MinTop": 166
+          },
+          {
+            "LineText": "•metri",
+            "Words": [
+              {
+                "WordText": "•",
+                "Left": 887,
+                "Top": 171,
+                "Height": 20,
+                "Width": 71
+              },
+              {
+                "WordText": "metri",
+                "Left": 887,
+                "Top": 171,
+                "Height": 20,
+                "Width": 71
+              }
+            ],
+            "MaxHeight": 20,
+            "MinTop": 171
+          },
+          {
+            "LineText": "150",
+            "Words": [
+              {
+                "WordText": "150",
+                "Left": 647,
+                "Top": 234,
+                "Height": 35,
+                "Width": 62
+              }
+            ],
+            "MaxHeight": 35,
+            "MinTop": 234
+          },
+          {
+            "LineText": "150",
+            "Words": [
+              {
+                "WordText": "150",
+                "Left": 645,
+                "Top": 293,
+                "Height": 32,
+                "Width": 66
+              }
+            ],
+            "MaxHeight": 32,
+            "MinTop": 293
+          },
+          {
+            "LineText": "150",
+            "Words": [
+              {
+                "WordText": "150",
+                "Left": 650,
+                "Top": 357,
+                "Height": 24,
+                "Width": 64
+              }
+            ],
+            "MaxHeight": 24,
+            "MinTop": 357
+          },
+          {
+            "LineText": "150",
+            "Words": [
+              {
+                "WordText": "150",
+                "Left": 650,
+                "Top": 415,
+                "Height": 24,
+                "Width": 59
+              }
+            ],
+            "MaxHeight": 24,
+            "MinTop": 415
+          },
+          {
+            "LineText": "150",
+            "Words": [
+              {
+                "WordText": "150",
+                "Left": 650,
+                "Top": 474,
+                "Height": 26,
+                "Width": 62
+              }
+            ],
+            "MaxHeight": 26,
+            "MinTop": 474
+          },
+          {
+            "LineText": "150",
+            "Words": [
+              {
+                "WordText": "150",
+                "Left": 641,
+                "Top": 533,
+                "Height": 27,
+                "Width": 59
+              }
+            ],
+            "MaxHeight": 27,
+            "MinTop": 533
+          },
+          {
+            "LineText": "150",
+            "Words": [
+              {
+                "WordText": "150",
+                "Left": 648,
+                "Top": 586,
+                "Height": 32,
+                "Width": 71
+              }
+            ],
+            "MaxHeight": 32,
+            "MinTop": 586
+          },
+          {
+            "LineText": "150",
+            "Words": [
+              {
+                "WordText": "150",
+                "Left": 648,
+                "Top": 645,
+                "Height": 29,
+                "Width": 64
+              }
+            ],
+            "MaxHeight": 29,
+            "MinTop": 645
+          },
+          {
+            "LineText": "105",
+            "Words": [
+              {
+                "WordText": "105",
+                "Left": 880,
+                "Top": 244,
+                "Height": 29,
+                "Width": 64
+              }
+            ],
+            "MaxHeight": 29,
+            "MinTop": 244
+          },
+          {
+            "LineText": "208",
+            "Words": [
+              {
+                "WordText": "208",
+                "Left": 876,
+                "Top": 299,
+                "Height": 39,
+                "Width": 70
+              }
+            ],
+            "MaxHeight": 39,
+            "MinTop": 299
+          },
+          {
+            "LineText": "743",
+            "Words": [
+              {
+                "WordText": "743",
+                "Left": 878,
+                "Top": 359,
+                "Height": 32,
+                "Width": 61
+              }
+            ],
+            "MaxHeight": 32,
+            "MinTop": 359
+          },
+          {
+            "LineText": "70",
+            "Words": [
+              {
+                "WordText": "70",
+                "Left": 887,
+                "Top": 418,
+                "Height": 32,
+                "Width": 51
+              }
+            ],
+            "MaxHeight": 32,
+            "MinTop": 418
+          },
+          {
+            "LineText": "745",
+            "Words": [
+              {
+                "WordText": "745",
+                "Left": 875,
+                "Top": 479,
+                "Height": 32,
+                "Width": 71
+              }
+            ],
+            "MaxHeight": 32,
+            "MinTop": 479
+          },
+          {
+            "LineText": "71",
+            "Words": [
+              {
+                "WordText": "71",
+                "Left": 885,
+                "Top": 540,
+                "Height": 34,
+                "Width": 54
+              }
+            ],
+            "MaxHeight": 34,
+            "MinTop": 540
+          },
+          {
+            "LineText": "122",
+            "Words": [
+              {
+                "WordText": "122",
+                "Left": 885,
+                "Top": 596,
+                "Height": 34,
+                "Width": 76
+              }
+            ],
+            "MaxHeight": 34,
+            "MinTop": 596
+          },
+          {
+            "LineText": "31",
+            "Words": [
+              {
+                "WordText": "31",
+                "Left": 886,
+                "Top": 644,
+                "Height": 43,
+                "Width": 62
+              }
+            ],
+            "MaxHeight": 43,
+            "MinTop": 644
+          },
+          {
+            "LineText": "gb.",
+            "Words": [
+              {
+                "WordText": "gb",
+                "Left": 993,
+                "Top": 159,
+                "Height": 24,
+                "Width": 59
+              },
+              {
+                "WordText": ".",
+                "Left": 993,
+                "Top": 159,
+                "Height": 24,
+                "Width": 59
+              }
+            ],
+            "MaxHeight": 24,
+            "MinTop": 159
+          },
+          {
+            "LineText": "Apstrades Panelis",
+            "Words": [
+              {
+                "WordText": "Apstrades",
+                "Left": 1087,
+                "Top": 128,
+                "Height": 37,
+                "Width": 125
+              },
+              {
+                "WordText": "Panelis",
+                "Left": 1214,
+                "Top": 122,
+                "Height": 36,
+                "Width": 102
+              }
+            ],
+            "MaxHeight": 42,
+            "MinTop": 122
+          },
+          {
+            "LineText": "beigsanas",
+            "Words": [
+              {
+                "WordText": "beigsanas",
+                "Left": 1085,
+                "Top": 161,
+                "Height": 27,
+                "Width": 134
+              }
+            ],
+            "MaxHeight": 27,
+            "MinTop": 161
+          },
+          {
+            "LineText": "V/V,",
+            "Words": [
+              {
+                "WordText": "V",
+                "Left": 1222,
+                "Top": 154,
+                "Height": 27,
+                "Width": 88
+              },
+              {
+                "WordText": "/",
+                "Left": 1222,
+                "Top": 154,
+                "Height": 27,
+                "Width": 88
+              },
+              {
+                "WordText": "V",
+                "Left": 1222,
+                "Top": 154,
+                "Height": 27,
+                "Width": 88
+              },
+              {
+                "WordText": ",",
+                "Left": 1222,
+                "Top": 154,
+                "Height": 27,
+                "Width": 88
+              }
+            ],
+            "MaxHeight": 27,
+            "MinTop": 154
+          },
+          {
+            "LineText": "Slanis",
+            "Words": [
+              {
+                "WordText": "Slanis",
+                "Left": 1322,
+                "Top": 144,
+                "Height": 24,
+                "Width": 84
+              }
+            ],
+            "MaxHeight": 24,
+            "MinTop": 144
+          },
+          {
+            "LineText": "laiks",
+            "Words": [
+              {
+                "WordText": "laiks",
+                "Left": 1114,
+                "Top": 189,
+                "Height": 27,
+                "Width": 68
+              }
+            ],
+            "MaxHeight": 27,
+            "MinTop": 189
+          },
+          {
+            "LineText": "V/N,.",
+            "Words": [
+              {
+                "WordText": "V",
+                "Left": 1217,
+                "Top": 181,
+                "Height": 24,
+                "Width": 88
+              },
+              {
+                "WordText": "/",
+                "Left": 1217,
+                "Top": 181,
+                "Height": 24,
+                "Width": 88
+              },
+              {
+                "WordText": "N",
+                "Left": 1217,
+                "Top": 181,
+                "Height": 24,
+                "Width": 88
+              },
+              {
+                "WordText": ",.",
+                "Left": 1217,
+                "Top": 181,
+                "Height": 24,
+                "Width": 88
+              }
+            ],
+            "MaxHeight": 24,
+            "MinTop": 181
+          },
+          {
+            "LineText": "VIZ /",
+            "Words": [
+              {
+                "WordText": "VIZ",
+                "Left": 1314,
+                "Top": 169,
+                "Height": 29,
+                "Width": 67
+              },
+              {
+                "WordText": "/",
+                "Left": 1383,
+                "Top": 173,
+                "Height": 26,
+                "Width": 19
+              }
+            ],
+            "MaxHeight": 30,
+            "MinTop": 169
+          },
+          {
+            "LineText": "N/N",
+            "Words": [
+              {
+                "WordText": "N",
+                "Left": 1230,
+                "Top": 210,
+                "Height": 24,
+                "Width": 73
+              },
+              {
+                "WordText": "/",
+                "Left": 1230,
+                "Top": 210,
+                "Height": 24,
+                "Width": 73
+              },
+              {
+                "WordText": "N",
+                "Left": 1230,
+                "Top": 210,
+                "Height": 24,
+                "Width": 73
+              }
+            ],
+            "MaxHeight": 24,
+            "MinTop": 210
+          },
+          {
+            "LineText": "NEV",
+            "Words": [
+              {
+                "WordText": "NEV",
+                "Left": 1310,
+                "Top": 200,
+                "Height": 24,
+                "Width": 86
+              }
+            ],
+            "MaxHeight": 24,
+            "MinTop": 200
+          },
+          {
+            "LineText": "40",
+            "Words": [
+              {
+                "WordText": "40",
+                "Left": 1005,
+                "Top": 305,
+                "Height": 37,
+                "Width": 44
+              }
+            ],
+            "MaxHeight": 37,
+            "MinTop": 305
+          },
+          {
+            "LineText": "31",
+            "Words": [
+              {
+                "WordText": "31",
+                "Left": 1005,
+                "Top": 364,
+                "Height": 29,
+                "Width": 46
+              }
+            ],
+            "MaxHeight": 29,
+            "MinTop": 364
+          },
+          {
+            "LineText": "21",
+            "Words": [
+              {
+                "WordText": "21",
+                "Left": 1002,
+                "Top": 423,
+                "Height": 32,
+                "Width": 42
+              }
+            ],
+            "MaxHeight": 32,
+            "MinTop": 423
+          },
+          {
+            "LineText": "16",
+            "Words": [
+              {
+                "WordText": "16",
+                "Left": 997,
+                "Top": 484,
+                "Height": 32,
+                "Width": 42
+              }
+            ],
+            "MaxHeight": 32,
+            "MinTop": 484
+          },
+          {
+            "LineText": "23",
+            "Words": [
+              {
+                "WordText": "23",
+                "Left": 995,
+                "Top": 540,
+                "Height": 29,
+                "Width": 46
+              }
+            ],
+            "MaxHeight": 29,
+            "MinTop": 540
+          },
+          {
+            "LineText": "15",
+            "Words": [
+              {
+                "WordText": "15",
+                "Left": 997,
+                "Top": 601,
+                "Height": 29,
+                "Width": 49
+              }
+            ],
+            "MaxHeight": 29,
+            "MinTop": 601
+          },
+          {
+            "LineText": "7",
+            "Words": [
+              {
+                "WordText": "7",
+                "Left": 1005,
+                "Top": 657,
+                "Height": 29,
+                "Width": 29
+              }
+            ],
+            "MaxHeight": 29,
+            "MinTop": 657
+          },
+          {
+            "LineText": "VIN",
+            "Words": [
+              {
+                "WordText": "VIN",
+                "Left": 1222,
+                "Top": 315,
+                "Height": 39,
+                "Width": 73
+              }
+            ],
+            "MaxHeight": 39,
+            "MinTop": 315
+          },
+          {
+            "LineText": "VIV",
+            "Words": [
+              {
+                "WordText": "VIV",
+                "Left": 1222,
+                "Top": 436,
+                "Height": 36,
+                "Width": 72
+              }
+            ],
+            "MaxHeight": 36,
+            "MinTop": 436
+          },
+          {
+            "LineText": "VIV",
+            "Words": [
+              {
+                "WordText": "VIV",
+                "Left": 1227,
+                "Top": 557,
+                "Height": 29,
+                "Width": 73
+              }
+            ],
+            "MaxHeight": 29,
+            "MinTop": 557
+          },
+          {
+            "LineText": "NIN",
+            "Words": [
+              {
+                "WordText": "NIN",
+                "Left": 1220,
+                "Top": 606,
+                "Height": 37,
+                "Width": 71
+              }
+            ],
+            "MaxHeight": 37,
+            "MinTop": 606
+          },
+          {
+            "LineText": "NIK",
+            "Words": [
+              {
+                "WordText": "NIK",
+                "Left": 1215,
+                "Top": 670,
+                "Height": 32,
+                "Width": 73
+              }
+            ],
+            "MaxHeight": 32,
+            "MinTop": 670
+          },
+          {
+            "LineText": "N",
+            "Words": [
+              {
+                "WordText": "N",
+                "Left": 1345,
+                "Top": 374,
+                "Height": 32,
+                "Width": 34
+              }
+            ],
+            "MaxHeight": 32,
+            "MinTop": 374
+          },
+          {
+            "LineText": "v",
+            "Words": [
+              {
+                "WordText": "v",
+                "Left": 1345,
+                "Top": 557,
+                "Height": 34,
+                "Width": 34
+              }
+            ],
+            "MaxHeight": 34,
+            "MinTop": 557
+          },
+          {
+            "LineText": "N",
+            "Words": [
+              {
+                "WordText": "N",
+                "Left": 1330,
+                "Top": 608,
+                "Height": 37,
+                "Width": 44
+              }
+            ],
+            "MaxHeight": 37,
+            "MinTop": 608
+          },
+          {
+            "LineText": "Dikstäves laiks un",
+            "Words": [
+              {
+                "WordText": "Dikstäves",
+                "Left": 1432,
+                "Top": 160,
+                "Height": 30,
+                "Width": 112
+              },
+              {
+                "WordText": "laiks",
+                "Left": 1545,
+                "Top": 166,
+                "Height": 27,
+                "Width": 55
+              },
+              {
+                "WordText": "un",
+                "Left": 1602,
+                "Top": 169,
+                "Height": 26,
+                "Width": 37
+              }
+            ],
+            "MaxHeight": 35,
+            "MinTop": 160
+          },
+          {
+            "LineText": "iemesli, komentäri",
+            "Words": [
+              {
+                "WordText": "iemesli",
+                "Left": 1427,
+                "Top": 190,
+                "Height": 28,
+                "Width": 91
+              },
+              {
+                "WordText": ",",
+                "Left": 1427,
+                "Top": 190,
+                "Height": 27,
+                "Width": 91
+              },
+              {
+                "WordText": "komentäri",
+                "Left": 1520,
+                "Top": 193,
+                "Height": 29,
+                "Width": 119
+              }
+            ],
+            "MaxHeight": 32,
+            "MinTop": 190
+          },
+          {
+            "LineText": "2015000",
+            "Words": [
+              {
+                "WordText": "2015000",
+                "Left": 1422,
+                "Top": 270,
+                "Height": 34,
+                "Width": 144
+              }
+            ],
+            "MaxHeight": 34,
+            "MinTop": 270
+          },
+          {
+            "LineText": "2015000 (cL",
+            "Words": [
+              {
+                "WordText": "2015000",
+                "Left": 1423,
+                "Top": 315,
+                "Height": 60,
+                "Width": 154
+              },
+              {
+                "WordText": "(",
+                "Left": 1578,
+                "Top": 332,
+                "Height": 51,
+                "Width": 78
+              },
+              {
+                "WordText": "cL",
+                "Left": 1578,
+                "Top": 332,
+                "Height": 51,
+                "Width": 78
+              }
+            ],
+            "MaxHeight": 68,
+            "MinTop": 315
+          },
+          {
+            "LineText": "2017000",
+            "Words": [
+              {
+                "WordText": "2017000",
+                "Left": 1430,
+                "Top": 394,
+                "Height": 27,
+                "Width": 162
+              }
+            ],
+            "MaxHeight": 27,
+            "MinTop": 394
+          },
+          {
+            "LineText": "2078000",
+            "Words": [
+              {
+                "WordText": "2078000",
+                "Left": 1422,
+                "Top": 446,
+                "Height": 37,
+                "Width": 156
+              }
+            ],
+            "MaxHeight": 37,
+            "MinTop": 446
+          },
+          {
+            "LineText": "2017000(04)",
+            "Words": [
+              {
+                "WordText": "2017000",
+                "Left": 1419,
+                "Top": 509,
+                "Height": 49,
+                "Width": 229
+              },
+              {
+                "WordText": "(",
+                "Left": 1419,
+                "Top": 509,
+                "Height": 49,
+                "Width": 229
+              },
+              {
+                "WordText": "04",
+                "Left": 1419,
+                "Top": 509,
+                "Height": 49,
+                "Width": 229
+              },
+              {
+                "WordText": ")",
+                "Left": 1419,
+                "Top": 509,
+                "Height": 49,
+                "Width": 229
+              }
+            ],
+            "MaxHeight": 49,
+            "MinTop": 509
+          },
+          {
+            "LineText": "2018000(04)",
+            "Words": [
+              {
+                "WordText": "2018000",
+                "Left": 1425,
+                "Top": 567,
+                "Height": 37,
+                "Width": 225
+              },
+              {
+                "WordText": "(",
+                "Left": 1425,
+                "Top": 567,
+                "Height": 37,
+                "Width": 225
+              },
+              {
+                "WordText": "04",
+                "Left": 1425,
+                "Top": 567,
+                "Height": 37,
+                "Width": 225
+              },
+              {
+                "WordText": ")",
+                "Left": 1425,
+                "Top": 567,
+                "Height": 37,
+                "Width": 225
+              }
+            ],
+            "MaxHeight": 37,
+            "MinTop": 567
+          },
+          {
+            "LineText": "2016002",
+            "Words": [
+              {
+                "WordText": "2016002",
+                "Left": 1418,
+                "Top": 618,
+                "Height": 39,
+                "Width": 162
+              }
+            ],
+            "MaxHeight": 39,
+            "MinTop": 618
+          },
+          {
+            "LineText": "20•16002",
+            "Words": [
+              {
+                "WordText": "20",
+                "Left": 1420,
+                "Top": 667,
+                "Height": 54,
+                "Width": 162
+              },
+              {
+                "WordText": "•",
+                "Left": 1420,
+                "Top": 667,
+                "Height": 54,
+                "Width": 162
+              },
+              {
+                "WordText": "16002",
+                "Left": 1420,
+                "Top": 667,
+                "Height": 54,
+                "Width": 162
+              }
+            ],
+            "MaxHeight": 54,
+            "MinTop": 667
+          }
+        ],
+        "HasOverlay": true
+      },
+      "TextOrientation": "0",
+      "FileParseExitCode": 1,
+      "ParsedText": "Garuma audzešana (Diefenbacher)\t\r\nDat.\tProj.\tApstrades\t\r\n2025\tOperat.\tsaksanas\tBiez.\tTenakosie Izejosie\tApstrades Panelis\tSlanis\t\r\nNr.\tPlat.\tgb.\tV/V,\t\r\nlaiks\tmetri\t•metri\tbeigsanas\tVIZ /\tDikstäves laiks un\t\r\nlaiks\tV/N,.\t\r\n01.09\tR 30\t08:50\tN/N\tNEV\tiemesli, komentäri\t\r\n47\t150\t\r\n105\t\r\nR30\t150\t2015000\t\r\n208\t40\t\r\nR30\t47\t150\tVIN\t2015000 (cL\t\r\n743\t31\tN\t\r\nR30\t47\t2017000\t\r\n150\t70\t21\t\r\nR30\t47\tVIV\t2078000\t\r\n150\t745\t16\t\r\nR 30\t417\t2017000(04)\t\r\n150\t71\t23\t\r\nR18II\t47\tVIV\tv\t2018000(04)\t\r\n150\t122\t15\t\r\nNIN\tN\t\r\n47\t150\t31\t7\t2016002\t\r\nNIK\t20•16002\t\r\n",
+      "ErrorMessage": "",
+      "ErrorDetails": ""
+    }
+  ],
+  "OCRExitCode": 1,
+  "IsErroredOnProcessing": false,
+  "ProcessingTimeInMilliseconds": "640",
+  "SearchablePDFURL": "Searchable PDF not generated as it was not requested."
+}

@@ -1,7 +1,11 @@
 package com.example.myapplication.dependancy
 
-import android.os.AsyncTask
 import android.util.Log
+import com.example.myapplication.BuildConfig
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.DataOutputStream
@@ -11,7 +15,7 @@ import java.net.URLEncoder
 import javax.net.ssl.HttpsURLConnection
 
 /**
- * Async Task to invoke OCR.space API endpoint and parse tabular document data.
+ * Task to invoke OCR.space API endpoint asynchronously using Kotlin Coroutines.
  * Reference: https://ocr.space/ocrapi#java
  */
 class OCRAsyncTask(
@@ -20,21 +24,37 @@ class OCRAsyncTask(
     private val mImageDataOrUrl: String?,
     private val mLanguage: String?,
     private val mIOCRCallBack: IOCRCallBack
-) : AsyncTask<Any?, Any?, String?>() {
+) {
 
     private val apiUrl: String = "https://api.ocr.space/parse/image"
 
-    override fun doInBackground(params: Array<Any?>?): String? {
-        try {
-            return sendPost(
-                apiKey = if (!mApiKey.isNullOrBlank()) mApiKey else com.example.myapplication.BuildConfig.OCR_API_KEY,
+    fun execute(scope: CoroutineScope = CoroutineScope(Dispatchers.IO)) {
+        scope.launch(Dispatchers.IO) {
+            val result = doInBackground()
+            withContext(Dispatchers.Main) {
+                Log.d(TAG, "OCR API Result: $result")
+                mIOCRCallBack.getOCRCallBackResult(result)
+            }
+        }
+    }
+
+    suspend fun executeAsync(): String? = withContext(Dispatchers.IO) {
+        val result = doInBackground()
+        Log.d(TAG, "OCR API Result: $result")
+        result
+    }
+
+    private fun doInBackground(): String? {
+        return try {
+            sendPost(
+                apiKey = if (!mApiKey.isNullOrBlank()) mApiKey else BuildConfig.OCR_API_KEY,
                 isOverlayRequired = isOverlayRequired,
                 imageDataOrUrl = mImageDataOrUrl,
                 language = if (!mLanguage.isNullOrBlank()) mLanguage else "eng"
             )
         } catch (e: Exception) {
             Log.e(TAG, "OCR Request failed", e)
-            return JSONObject().apply {
+            JSONObject().apply {
                 put("IsErroredOnProcessing", true)
                 put("ErrorMessage", listOf("Network or parsing error: ${e.localizedMessage}"))
             }.toString()
@@ -59,7 +79,7 @@ class OCRAsyncTask(
         postDataParams.put("apikey", apiKey)
         postDataParams.put("isOverlayRequired", isOverlayRequired)
         postDataParams.put("language", language)
-        
+
         // Critical parameters for table reading
         postDataParams.put("isTable", true)
         postDataParams.put("OCREngine", "2")
@@ -96,12 +116,6 @@ class OCRAsyncTask(
         return response.toString()
     }
 
-    override fun onPostExecute(result: String?) {
-        super.onPostExecute(result)
-        Log.d(TAG, "OCR API Result: $result")
-        mIOCRCallBack.getOCRCallBackResult(result)
-    }
-
     @Throws(Exception::class)
     private fun getPostDataString(params: JSONObject): String {
         val result = StringBuilder()
@@ -110,7 +124,7 @@ class OCRAsyncTask(
         val itr = params.keys()
         while (itr.hasNext()) {
             val key = itr.next()
-            val value = params.get(key)
+            val value = params[key]
 
             if (first) first = false
             else result.append("&")

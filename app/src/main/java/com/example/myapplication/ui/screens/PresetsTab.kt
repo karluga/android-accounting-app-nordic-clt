@@ -342,7 +342,7 @@ fun PresetsTab(
                                             modifier = Modifier.width(40.dp),
                                             contentAlignment = Alignment.Center
                                         ) {
-                                            Text(text = "${index + 1}", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                            Text(text = (index + 1).toString(), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                                         }
 
                                         // Source Header
@@ -360,7 +360,7 @@ fun PresetsTab(
                                         // Output Mapping
                                         PresetInputCell(outMap, 140, "Datums, Related to") {
                                             outMap = it
-                                            columnsState[index] = columnsState[index].copy(outputMapping = if (it.isBlank()) null else it)
+                                            columnsState[index] = columnsState[index].copy(outputMapping = it.ifBlank { null })
                                         }
 
                                         // Group (1: Import, 2: Calculations, 3: Secondary)

@@ -38,3 +38,15 @@ data class EmployeeSalaryData(
     val baseSalary: Double = hours * hourlyRate
     val totalEarnings: Double = baseSalary + bonus
 }
+
+// Data class representing 7-column Excel export summary row
+data class ExcelExportRow(
+    val taskName: String,
+    val status: String = "Completed",
+    val date: String,
+    val m3: String,
+    val mastersCount: String,
+    val relatedTo: String,
+    val type: String = "Ražošana"
+)
+
