@@ -36,6 +36,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.myapplication.BuildConfig
 import com.example.myapplication.dependancy.IOCRCallBack
 import com.example.myapplication.dependancy.OCRAsyncTask
 import com.example.myapplication.models.ProductionRow
@@ -148,7 +149,7 @@ private fun DocumentImportContent(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val mApiKey = "K89893470788957"
+    val mApiKey = BuildConfig.OCR_API_KEY
 
     // Skip manual check checkbox state (enabled by default)
     var skipManualCheck by rememberSaveable { mutableStateOf(true) }
@@ -182,7 +183,7 @@ private fun DocumentImportContent(
             mApiKey = mApiKey,
             isOverlayRequired = true,
             mImageDataOrUrl = base64Image,
-            mLanguage = "eng",
+            mLanguage = "lat",
             mIOCRCallBack = object : IOCRCallBack {
                 override fun getOCRCallBackResult(response: String?) {
                     isOcrProcessing = false
@@ -1091,6 +1092,7 @@ private fun parseAndApplyOcrToRawRows(
     rotationAngle: Float
 ): String {
     val rotationInfo = "Lapa $currentPageNum (Orientācija: ${rotationAngle.toInt()}°)"
+    val jsonDebugInfo = if (!response.isNullOrBlank()) "\n\nRaw OCR JSON Response:\n$response" else ""
 
     if (response.isNullOrBlank()) {
         return "OCR.space atbilde ir tukša. [$rotationInfo]\nNav nolasīti dati no dokumenta."
@@ -1101,19 +1103,19 @@ private fun parseAndApplyOcrToRawRows(
         val isErrored = json.optBoolean("IsErroredOnProcessing", false)
         if (isErrored) {
             val errorMsg = json.optJSONArray("ErrorMessage")?.optString(0) ?: "Nezināma OCR kļūda"
-            return "OCR.space Kļūda [$rotationInfo]: $errorMsg."
+            return "OCR.space Kļūda [$rotationInfo]: $errorMsg.$jsonDebugInfo"
         }
 
         val parsedResults = json.optJSONArray("ParsedResults")
         if (parsedResults == null || parsedResults.length() == 0) {
-            return "OCR.space atbilde nesatur ParsedResults."
+            return "OCR.space atbilde nesatur ParsedResults.$jsonDebugInfo"
         }
 
         val firstResult = parsedResults.getJSONObject(0)
         val parsedText = firstResult.optString("ParsedText", "")
 
         if (parsedText.isBlank()) {
-            return "OCR.space nespēja nolasīt tekstu no dokumenta [$rotationInfo]."
+            return "OCR.space nespēja nolasīt tekstu no dokumenta [$rotationInfo].$jsonDebugInfo"
         }
 
         val columns = activePreset?.columns ?: emptyList()
@@ -1157,13 +1159,13 @@ private fun parseAndApplyOcrToRawRows(
         }
 
         return if (addedCount > 0) {
-            "OCR.space sekmīgi nolasīja $addedCount rindas [$rotationInfo]!\nDati ielādēti tabulā. Lūdzu, pārbaudiet un rediģējiet šūnas pirms ģenerēšanas."
+            "OCR.space sekmīgi nolasīja $addedCount rindas [$rotationInfo]!\nDati ielādēti tabulā. Lūdzu, pārbaudiet un rediģējiet šūnas pirms ģenerēšanas.$jsonDebugInfo"
         } else {
-            "OCR.space nolasīja tekstu, bet netika identificēta neviena datu rinda [$rotationInfo]."
+            "OCR.space nolasīja tekstu, bet netika identificēta neviena datu rinda [$rotationInfo].$jsonDebugInfo"
         }
 
     } catch (e: Exception) {
-        return "OCR atbildes parsēšanas kļūda (${e.localizedMessage}) [$rotationInfo]."
+        return "OCR atbildes parsēšanas kļūda (${e.localizedMessage}) [$rotationInfo].$jsonDebugInfo"
     }
 }
 
