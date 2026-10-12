@@ -184,11 +184,17 @@ object DataNormalizer {
     }
 
     fun normalizeProjectCode(raw: String): String {
-        val clean = raw.trim().uppercase()
-            .replace("RO2", "R02")
-            .replace("ROZ", "R02")
-            .replace("R.02", "R02")
-            .replace("RO", "R0")
+        // 1. Remove any dots from the project code (e.g., R.02 -> R02)
+        var clean = raw.trim().uppercase().replace(".", "")
+
+        val rIndex = clean.indexOf('R')
+        if (rIndex != -1) {
+            val prefix = clean.substring(0, rIndex + 1)
+            val suffix = clean.substring(rIndex + 1)
+                .replace('O', '0') // 2. Letter 'O' after 'R' in any position is replaced with '0'
+                .replace('Z', '2') // 3. Letter 'Z' after 'R' in any position is replaced with '2'
+            clean = prefix + suffix
+        }
 
         if (clean.toIntOrNull() != null) {
             return "R" + clean.padStart(2, '0')
