@@ -90,7 +90,80 @@ If "izejošie metri" nuber divided by "gb." is bigger than 13, then we clear the
 
 ---
 
-## 10. Merged Column Splitting (< 50% vs ≥ 50% threshold)
-Before data normalization runs, adjacent values that were accidentally merged into a single cell during scanning/OCR (e.g. `"R30 08:50"` in project column) are automatically split into their correct columns, shifting subsequent values in that row back to the right:
-* **Isolated / Minor Merged Cells (< 50% of rows):** If fewer than 50% of all rows have space-delimited text in a cell, the cell is split into 2 tokens ONLY IF both tokens strictly satisfy the formatting rules of their respective target columns (e.g. `"R30"` matches `project` code format AND `"08:50"` matches `start_time` format).
-* **Majority Merged Columns (≥ 50% of rows):** If 50% or more of all rows have space-delimited text in that column, the cell is automatically split into 2 columns at the space delimiter (without strict formatting rule enforcement), shifting subsequent values to the right.
+## 10. Semantic Column Alignment, Token Splitting & Diefenbacher Normalization
+
+### A. Individual Cell Token Splitting (`split_merged_cell_token`)
+When raw OCR outputs multiple merged fields into a single cell token, string pattern matching is used to split the single cell into distinct sequential tokens before column mapping:
+
+1. **Operator + Project Code Splitting:**
+   - **Target Pattern:** Operator acronym (`ABA`, `RGO`, `RVE`, `DSA`, `AGU`, `VŠ`, `VŠĻ`, `GPU`, `GR`) followed by space and a project code.
+   - **Regex Pattern:** `^(ABA|RGO|RVE|DSA|AGU|VŠ|VŠĻ|GPU|GR)\s+([rR]?\-?\d+\w*)$` (case-insensitive).
+   - **Examples:**
+     - `"ABA R30"` $\rightarrow$ `["ABA", "R30"]`
+     - `"RGO R18"` $\rightarrow$ `["RGO", "R18"]`
+     - `"DSA R02"` $\rightarrow$ `["DSA", "R02"]`
+
+2. **Master Panel ID + Project Code/Number Splitting:**
+   - **Target Pattern:** 5–8 digit master panel ID followed by a space and a project code or project number.
+   - **Regex Pattern:** `^(\d{5,8})\s+([rR]?\-?\d+\w*)$` (case-insensitive).
+   - **Examples:**
+     - `"2015002 R-31"` $\rightarrow$ `["2015002", "R-31"]`
+     - `"2017000 31"` $\rightarrow$ `["2017000", "31"]`
+
+3. **General Alphanumeric Merged Pair Splitting:**
+   - **Target Pattern:** 1–8 character alphanumeric code space-separated from a project code (`R`/`r` prefix) or 5–8 digit ID.
+   - **Regex Pattern:** `^([a-zA-Z0-9]{1,8})\s+([rR]\-?\d+\w*|\d{5,8})$`.
+   - **Result:** Expanded into `[token_1, token_2]`.
+
+---
+
+### B. Diefenbacher Row Normalization & Semantic Field Alignment (`align_diefenbacher_tokens` & `fix_merged_row_fields`)
+
+1. **Merged Project & Start Time Splitting:**
+   - **Regex Pattern:** `^([rR]\.?[0-9]{1,4}(?:\s+[I|V|X]+)?(?:[a-zA-Z0-9_\-]*))\s+(\d{1,2}[:.\-]\d{2})$`
+   - **Action:** Extracts `project` and `start_time` from a single string. Normalizes time hyphens/dots to colons (`:`).
+   - **Examples:**
+     - `"R30 08:50"` $\rightarrow$ `project = "R30"`, `start_time = "08:50"`
+     - `"R18 III 08-50"` $\rightarrow$ `project = "R18 III"`, `start_time = "08:50"`
+
+2. **Merged Panel Quality & Layer Enum Splitting:**
+   - **Regex Pattern:** `\b(V/V|V/N|N/N)\s+([a-zA-Z]{1,4})\b` (case-insensitive).
+   - **Action:** Splits quality enum and layer enum into distinct roles. Removes extraneous `"VIZ "` prefix if present in `layer`.
+   - **Examples:**
+     - `"V/V N"` $\rightarrow$ `panel = "V/V"`, `layer = "N"`
+     - `"V/N V"` $\rightarrow$ `panel = "V/N"`, `layer = "V"`
+
+3. **Master Panel ID Extraction & Normalization:**
+   - **Identification Regex:** `(20\d{5}|\d{7})(?:[\s/(\[]+(\d{1,2})\)?)*`
+   - **Suffix Normalization Rule:** If the 7-digit ID has a 2-digit trailing suffix (e.g., `/04`, `(04)`, ` 04`), the suffix is converted to `(OK)`.
+   - **Field Relocation Rule:** If a Master Panel ID appears inside `comments`, `layer`, `end_time`, or `panel`, it is extracted, sanitized to `<master_id>(OK)`, placed into `comments`, and cleared from the source field.
+   - **Examples:**
+     - `"2016002/04)"` $\rightarrow$ `"2016002(OK)"`
+     - `"2018000(04)"` $\rightarrow$ `"2018000(OK)"`
+     - `"2015000 04"` $\rightarrow$ `"2015000(OK)"`
+
+4. **Diefenbacher Numeric Field Column Shifting:**
+   - **Trigger Condition:** Column 6 (`Ienākošie metri`) is intended to remain blank (`""`). If OCR places numbers in `incoming_m` and `outgoing_m` while `amount` (`gb.`) is empty:
+     - Set `incoming_m = ""`
+     - Shift `incoming_m` value $\rightarrow$ `outgoing_m`
+     - Shift `outgoing_m` value $\rightarrow$ `amount` (`gb.`)
+   - **Example:** `incoming_m="105"`, `outgoing_m="9"`, `amount=""` $\rightarrow$ `incoming_m=""`, `outgoing_m="105"`, `amount="9"`.
+
+5. **OCR Notes Display:**
+   - Both raw OCR API Markdown response (`BEFORE EDITS`) and sanitized table (`AFTER EDITS`) are logged side-by-side in Markdown format under "OCR piezīmes".
+
+6. **Manual Column Data Swapping UI:**
+   - Users can click any two column header titles (`<th>`) in the interactive table to swap all cell values between those two columns across all rows in the dataset.
+
+---
+
+## 11. Vakuumprese & CNC Positional Mapping & Row Reordering Rules
+
+### A. Positional Token Alignment & Token Flattening (`align_vacuumpress_tokens`)
+1. **Token Expansion:** Each cell in the OCR row is passed through `split_merged_cell_token()` to unpack any merged tokens (e.g. `"ABA R30"` $\rightarrow$ `["ABA", "R30"]`).
+2. **Positional Mapping:** The flattened token list is mapped 1-to-1 to preset columns in left-to-right positional order.
+3. **End Padding Rule:** If a row contains fewer tokens than the preset column count (e.g., 11 cells instead of 12 due to omitted empty OCR cells), empty strings (`""`) are padded **strictly at the very end** of the token array. Data is never shifted or inserted into middle columns.
+
+### B. Row Reordering Policy
+- **Vakuumprese & CNC Tables:** Row reordering is strictly disabled to prevent misalignment.
+- **Diefenbacher Tables:** Row reordering remains enabled when needed.

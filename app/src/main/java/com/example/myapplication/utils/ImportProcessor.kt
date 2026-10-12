@@ -113,7 +113,6 @@ object ImportProcessor {
         rotationAngle: Float
     ): String {
         val rotationInfo = "Lapa $currentPageNum (Orientācija: ${rotationAngle.toInt()}°)"
-        val jsonDebugInfo = if (!response.isNullOrBlank()) "\n\nRaw OCR JSON Response:\n$response" else ""
 
         if (response.isNullOrBlank()) {
             return "OCR.space atbilde ir tukša. [$rotationInfo]\nNav nolasīti dati no dokumenta."
@@ -124,19 +123,19 @@ object ImportProcessor {
             val isErrored = json.optBoolean("IsErroredOnProcessing", false)
             if (isErrored) {
                 val errorMsg = json.optJSONArray("ErrorMessage")?.optString(0) ?: "Nezināma OCR kļūda"
-                return "OCR.space Kļūda [$rotationInfo]: $errorMsg.$jsonDebugInfo"
+                return "OCR.space Kļūda [$rotationInfo]: $errorMsg"
             }
 
             val parsedResults = json.optJSONArray("ParsedResults")
             if (parsedResults == null || parsedResults.length() == 0) {
-                return "OCR.space atbilde nesatur ParsedResults.$jsonDebugInfo"
+                return "OCR.space atbilde nesatur ParsedResults [$rotationInfo]."
             }
 
             val firstResult = parsedResults.getJSONObject(0)
             val parsedText = firstResult.optString("ParsedText", "")
 
             if (parsedText.isBlank()) {
-                return "OCR.space nespēja nolasīt tekstu no dokumenta [$rotationInfo].$jsonDebugInfo"
+                return "OCR.space nespēja nolasīt tekstu no dokumenta [$rotationInfo]."
             }
 
             val columns = activePreset?.columns ?: emptyList()
@@ -193,15 +192,57 @@ object ImportProcessor {
                 DataNormalizer.normalizeRows(rawRowsList, activePreset)
             }
 
-            return if (addedCount > 0) {
-                "OCR.space sekmīgi nolasīja $addedCount rindas [$rotationInfo]!\nDati ielādēti atsevišķās kolonnu šūnās. Lūdzu, pārbaudiet pirms ģenerēšanas.$jsonDebugInfo"
+            val statusHeader = if (addedCount > 0) {
+                "OCR.space sekmīgi nolasīja $addedCount rindas [$rotationInfo]!\nDati ielādēti atsevišķās kolonnu šūnās. Lūdzu, pārbaudiet pirms ģenerēšanas."
             } else {
-                "OCR.space nolasīja tekstu, bet netika identificēta neviena datu rinda [$rotationInfo].$jsonDebugInfo"
+                "OCR.space nolasīja tekstu, bet netika identificēta neviena datu rinda [$rotationInfo]."
             }
 
+            val beforeEditsMarkdown = "### 1. OCR Atbilde PIRMS Apstrādes (Raw OCR Text):\n$parsedText"
+            val afterEditsMarkdown = "### 2. Tabula PĒC Apstrādes & Normalizācijas:\n" + formatRowsAsMarkdownTable(rawRowsList, activePreset)
+
+            return "$statusHeader\n\n$beforeEditsMarkdown\n\n$afterEditsMarkdown"
+
         } catch (e: Exception) {
-            return "OCR atbildes parsēšanas kļūda (${e.localizedMessage}) [$rotationInfo].$jsonDebugInfo"
+            return "OCR atbildes parsēšanas kļūda (${e.localizedMessage}) [$rotationInfo]."
         }
+    }
+
+    fun formatRowsAsMarkdownTable(
+        rawRowsList: List<RawScannedRow>,
+        activePreset: TablePreset?
+    ): String {
+        if (rawRowsList.isEmpty()) return "*(Tukša tabula)*"
+
+        val columns = activePreset?.columns ?: emptyList()
+        val headers = if (columns.isNotEmpty()) {
+            columns.map { it.sourceHeader.ifBlank { it.role } }
+        } else {
+            listOf("Datums", "Operat.", "Proj.Nr.", "Dati")
+        }
+
+        val sb = StringBuilder()
+
+        // Markdown Header
+        sb.append("| ").append(headers.joinToString(" | ")).append(" |\n")
+
+        // Markdown Divider
+        sb.append("| ").append(headers.joinToString(" | ") { "---" }).append(" |\n")
+
+        // Markdown Rows
+        for (row in rawRowsList) {
+            val cellValues = if (columns.isNotEmpty()) {
+                columns.map { col ->
+                    val v = row.getCell(col.role).ifBlank { row.getCell(col.sourceHeader) }
+                    v.ifBlank { "-" }
+                }
+            } else {
+                row.cells.values.map { it.ifBlank { "-" } }
+            }
+            sb.append("| ").append(cellValues.joinToString(" | ")).append(" |\n")
+        }
+
+        return sb.toString().trimEnd()
     }
 
     private fun isHeaderLine(line: String): Boolean {

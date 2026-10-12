@@ -226,10 +226,8 @@ object DataNormalizer {
 
     fun normalizeLayer(raw: String, enumValues: List<String>): String {
         val upper = raw.uppercase().trim()
-        if (upper.contains("NEU") || upper.contains("NEV")) return "NEV"
-        if (upper.contains("VIZ")) return "VIZ"
-        if (upper.startsWith("V") && upper.endsWith("Z")) return "VIZ"
-        if (upper.startsWith("N") && upper.endsWith("V") && upper.contains("E")) return "NEV"
+        if (upper == "V" || upper.contains("VIZ") || (upper.startsWith("V") && upper.endsWith("Z"))) return "VIZ"
+        if (upper == "N" || upper.contains("NEU") || upper.contains("NEV") || (upper.startsWith("N") && upper.endsWith("V") && upper.contains("E"))) return "NEV"
         if (enumValues.isNotEmpty()) {
             val match = enumValues.firstOrNull { it.uppercase() == upper || upper.contains(it.uppercase()) }
             if (match != null) return match

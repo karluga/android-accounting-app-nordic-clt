@@ -76,8 +76,8 @@ class DataNormalizerTest {
     @Test
     fun testSplitMergedColumns() {
         val preset = TablePreset(
-            key = "test",
-            taskName = "Test Task",
+            key = "diefenbacher",
+            taskName = "1. Audzētājs",
             columns = listOf(
                 PresetColumn(0, "Dat. 2026", "date", normalizationRule = "date_dd_mm"),
                 PresetColumn(1, "Operat.", "operator", normalizationRule = "operator"),
@@ -120,5 +120,77 @@ class DataNormalizerTest {
         assertEquals("08:50", row0.getCell("start_time"))
         assertEquals("47", row0.getCell("thickness"))
         assertEquals("150", row0.getCell("width"))
+    }
+
+    @Test
+    fun testDiefenbacherOcrAlignmentAndNormalization() {
+        val diefenbacherPreset = TablePreset(
+            key = "diefenbacher",
+            taskName = "1. Audzētājs",
+            columns = listOf(
+                PresetColumn(0, "Dat. 2026", "date", normalizationRule = "date_dd_mm"),
+                PresetColumn(1, "Operat.", "operator", normalizationRule = "operator_whitelist_diefenbacher"),
+                PresetColumn(2, "Proj.Nr.", "project", normalizationRule = "project_code"),
+                PresetColumn(3, "Apstrādes sākšanas laiks", "start_time", normalizationRule = "time_hh_mm", forwardFill = false),
+                PresetColumn(4, "Biez.", "thickness", normalizationRule = "numeric"),
+                PresetColumn(5, "Plat.", "width", normalizationRule = "numeric"),
+                PresetColumn(6, "Ienākošie metri", "incoming_m", normalizationRule = "numeric"),
+                PresetColumn(7, "Izejošie metri", "outgoing_m", normalizationRule = "numeric"),
+                PresetColumn(8, "gb.", "amount", normalizationRule = "numeric"),
+                PresetColumn(9, "Apstrādes beigšanas laiks", "end_time", normalizationRule = "time_hh_mm", forwardFill = false),
+                PresetColumn(10, "Panelis", "panel", normalizationRule = "panel_enum"),
+                PresetColumn(11, "Slānis", "layer", normalizationRule = "layer_code"),
+                PresetColumn(12, "Dīkstāve un komentāri", "comments", normalizationRule = "passthrough")
+            )
+        )
+
+        // Row 1: Merged R30 08:50 in project column
+        val row0 = RawScannedRow()
+        row0.setCell("date", "01.09")
+        row0.setCell("operator", "VŠ")
+        row0.setCell("project", "R30 08:50")
+        row0.setCell("start_time", "47")
+        row0.setCell("thickness", "150")
+        row0.setCell("width", "105")
+        row0.setCell("incoming_m", "9")
+        row0.setCell("outgoing_m", "V/N N")
+        row0.setCell("amount", "2015000")
+
+        // Row 2: Shifted left due to omitted date/operator
+        val row1 = RawScannedRow()
+        row1.setCell("date", "R30")
+        row1.setCell("operator", "47")
+        row1.setCell("project", "150")
+        row1.setCell("start_time", "208")
+        row1.setCell("thickness", "40")
+        row1.setCell("width", "V/N V")
+        row1.setCell("incoming_m", "2015000(04)")
+
+        val rows = mutableListOf(row0, row1)
+        DataNormalizer.normalizeRows(rows, diefenbacherPreset)
+
+        // Verify Row 0
+        assertEquals("01/09/2026", row0.getCell("date"))
+        assertEquals("VŠ", row0.getCell("operator"))
+        assertEquals("R30", row0.getCell("project"))
+        assertEquals("08:50", row0.getCell("start_time"))
+        assertEquals("47", row0.getCell("thickness"))
+        assertEquals("150", row0.getCell("width"))
+        assertEquals("105", row0.getCell("incoming_m"))
+        assertEquals("9", row0.getCell("outgoing_m"))
+
+        // Verify Row 1 (Realigned & Forward-Filled Date/Operator)
+        assertEquals("01/09/2026", row1.getCell("date"))
+        assertEquals("VŠ", row1.getCell("operator"))
+        assertEquals("R30", row1.getCell("project"))
+        assertEquals("", row1.getCell("start_time")) // Start time does not forward fill
+        assertEquals("47", row1.getCell("thickness"))
+        assertEquals("150", row1.getCell("width"))
+        assertEquals("", row1.getCell("incoming_m"))
+        assertEquals("208", row1.getCell("outgoing_m"))
+        assertEquals("40", row1.getCell("amount"))
+        assertEquals("V/N", row1.getCell("panel"))
+        assertEquals("VIZ", row1.getCell("layer"))
+        assertEquals("2015000(OK)", row1.getCell("comments"))
     }
 }
