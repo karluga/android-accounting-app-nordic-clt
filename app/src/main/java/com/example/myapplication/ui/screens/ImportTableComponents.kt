@@ -5,14 +5,21 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -75,7 +82,8 @@ fun TableInputCell(
     keyboardType: KeyboardType = KeyboardType.Text,
     bgColor: Color = Color.Transparent,
     textColor: Color = Color.Unspecified,
-    onValueChange: (String) -> Unit
+    onValueChange: (String) -> Unit,
+    onEnterPressed: (() -> Unit)? = null
 ) {
     Box(
         modifier = Modifier
@@ -89,14 +97,29 @@ fun TableInputCell(
             placeholder = { Text(placeholder, fontSize = 10.sp, color = textColor.copy(alpha = 0.5f)) },
             singleLine = true,
             textStyle = TextStyle(fontSize = 11.sp, color = if (textColor != Color.Unspecified) textColor else LocalContentColor.current),
-            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+            keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(
+                onDone = { onEnterPressed?.invoke() },
+                onNext = { onEnterPressed?.invoke() }
+            ),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = Color.Transparent,
                 unfocusedContainerColor = Color.Transparent,
                 focusedBorderColor = MaterialTheme.colorScheme.primary,
                 unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
             ),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .onKeyEvent { keyEvent ->
+                    if (keyEvent.type == KeyEventType.KeyUp &&
+                        (keyEvent.key == Key.Enter || keyEvent.key == Key.NumPadEnter)
+                    ) {
+                        onEnterPressed?.invoke()
+                        true
+                    } else {
+                        false
+                    }
+                }
         )
     }
 }

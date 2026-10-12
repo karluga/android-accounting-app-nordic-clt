@@ -13,7 +13,8 @@ data class PresetColumn(
     val normalizationRule: String? = null,
     val keywords: List<String> = emptyList(),
     val enumValues: List<String> = emptyList(),
-    val group: Int = 3 // 1 = Import (Pink), 2 = Calculations (Lilac), 3 = Secondary (Dark)
+    val group: Int = 3, // 1 = Import (Pink), 2 = Calculations (Lilac), 3 = Secondary (Dark)
+    val forwardFill: Boolean = true
 ) {
     fun toJsonObject(): JSONObject {
         val json = JSONObject()
@@ -25,6 +26,9 @@ data class PresetColumn(
         json.put("nullable", nullable)
         json.put("normalization_rule", normalizationRule ?: JSONObject.NULL)
         json.put("group", group)
+        if (!forwardFill) {
+            json.put("forward_fill", false)
+        }
 
         val kwArr = JSONArray()
         keywords.forEach { kwArr.put(it) }
@@ -70,7 +74,8 @@ data class PresetColumn(
                 normalizationRule = if (json.isNull("normalization_rule")) null else json.optString("normalization_rule"),
                 keywords = kwList,
                 enumValues = enumList,
-                group = json.optInt("group", defaultGroup)
+                group = json.optInt("group", defaultGroup),
+                forwardFill = json.optBoolean("forward_fill", true)
             )
         }
 

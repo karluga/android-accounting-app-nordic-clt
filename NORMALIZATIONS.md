@@ -77,9 +77,9 @@ Anything starting with "N", ending with "V", contains "E" -> NEV
 ---
 
 ## 8. Numeric & Master Count Fields
-* **Numeric Fields (`biezums`, `platums`, `metri`):** Stripped of non-numeric characters except decimal points (`.`). `ISC` → `150`.
+* **Numeric Fields (`biezums`, `platums`, `metri`):** Stripped of non-numeric characters except decimal points (`.`). `ISC` → `150`. // this
 
-the company uses standard planks from PATA TIMBER. this also needs to be user-defined in presets but already defined in the app
+the company uses standard planks from PATA TIMBER. this also needs to be user-defined in presets but already defined in the app // this
 # biezums x platums
 # 47x150
 # 45x170
@@ -87,3 +87,10 @@ the company uses standard planks from PATA TIMBER. this also needs to be user-de
 ## 9. Diefenbacher > Izejošie metri column
 This will have an extra input field for the user in presets how large the panels can be.
 If "izejošie metri" nuber divided by "gb." is bigger than 13, then we clear the field.
+
+---
+
+## 10. Merged Column Splitting (< 50% vs ≥ 50% threshold)
+Before data normalization runs, adjacent values that were accidentally merged into a single cell during scanning/OCR (e.g. `"R30 08:50"` in project column) are automatically split into their correct columns, shifting subsequent values in that row back to the right:
+* **Isolated / Minor Merged Cells (< 50% of rows):** If fewer than 50% of all rows have space-delimited text in a cell, the cell is split into 2 tokens ONLY IF both tokens strictly satisfy the formatting rules of their respective target columns (e.g. `"R30"` matches `project` code format AND `"08:50"` matches `start_time` format).
+* **Majority Merged Columns (≥ 50% of rows):** If 50% or more of all rows have space-delimited text in that column, the cell is automatically split into 2 columns at the space delimiter (without strict formatting rule enforcement), shifting subsequent values to the right.

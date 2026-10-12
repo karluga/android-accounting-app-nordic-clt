@@ -3,11 +3,15 @@ package com.example.myapplication.utils
 import com.example.myapplication.models.PresetColumn
 import com.example.myapplication.models.RawScannedRow
 import com.example.myapplication.models.TablePreset
+import java.util.Locale
 
 object DataNormalizer {
 
     fun normalizeRows(rawRowsList: MutableList<RawScannedRow>, activePreset: TablePreset?) {
         if (rawRowsList.isEmpty() || activePreset == null) return
+
+        // 0. Pre-processing: Split merged columns if cells merged by accident (< 50% strict format vs >= 50% majority)
+        splitMergedColumns(rawRowsList, activePreset)
 
         var activeDate = ""
         var activeOperator = ""
@@ -253,5 +257,23 @@ object DataNormalizer {
             }
         }
         return null
+    }
+
+    fun isForwardFillAllowed(col: PresetColumn): Boolean {
+        if (!col.forwardFill) return false
+        if (col.normalizationRule == "time_hh_mm") return false
+        val rLower = col.role.lowercase(Locale.ROOT)
+        if (rLower in listOf("start_time", "end_time", "load_start", "cnc_start", "cnc_end", "unload_end", "sim_duration")) {
+            return false
+        }
+        return true
+    }
+
+    fun splitMergedColumns(rawRowsList: MutableList<RawScannedRow>, activePreset: TablePreset?) {
+        ColumnSplitter.splitMergedColumns(rawRowsList, activePreset)
+    }
+
+    fun matchesColumnFormat(token: String, col: PresetColumn): Boolean {
+        return ColumnSplitter.matchesColumnFormat(token, col)
     }
 }

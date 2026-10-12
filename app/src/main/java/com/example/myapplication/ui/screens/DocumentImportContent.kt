@@ -634,21 +634,22 @@ fun DocumentImportContent(
                                         if (columns.isNotEmpty()) {
                                             columns.forEach { col ->
                                                 val (bgColor, _, textColor) = getGroupColors(col.group)
-                                                var cellVal by remember(row.id, col.role) {
-                                                    mutableStateOf(row.getCell(col.role).ifBlank { row.getCell(col.sourceHeader) })
-                                                }
+                                                val cellVal = row.getCell(col.role).ifBlank { row.getCell(col.sourceHeader) }
 
                                                 TableInputCell(
                                                     value = cellVal,
                                                     widthDp = 130,
                                                     placeholder = col.sourceHeader,
                                                     bgColor = bgColor,
-                                                    textColor = textColor
-                                                ) { newValue ->
-                                                    cellVal = newValue
-                                                    viewModel.updateRawCell(row, col.role, newValue)
-                                                    viewModel.updateRawCell(row, col.sourceHeader, newValue)
-                                                }
+                                                    textColor = textColor,
+                                                    onValueChange = { newValue ->
+                                                        viewModel.updateRawCell(row, col.role, newValue)
+                                                        viewModel.updateRawCell(row, col.sourceHeader, newValue)
+                                                    },
+                                                    onEnterPressed = {
+                                                        viewModel.forwardFillColumn(index, col, activePreset)
+                                                    }
+                                                )
                                             }
                                         }
 

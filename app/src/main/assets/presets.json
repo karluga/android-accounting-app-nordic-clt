@@ -46,6 +46,7 @@
         "data_type": "string",
         "nullable": true,
         "normalization_rule": "time_hh_mm",
+        "forward_fill": false,
         "group": 3,
         "keywords": ["sākšan", "saksa", "start"]
       },
@@ -112,6 +113,7 @@
         "data_type": "string",
         "nullable": true,
         "normalization_rule": "time_hh_mm",
+        "forward_fill": false,
         "group": 3,
         "keywords": ["beigšan", "beigs", "end"]
       },
@@ -208,6 +210,7 @@
         "data_type": "string",
         "nullable": true,
         "normalization_rule": "time_hh_mm",
+        "forward_fill": false,
         "group": 3,
         "keywords": ["uzsāk", "saksa", "start"]
       },
@@ -274,6 +277,7 @@
         "data_type": "string",
         "nullable": true,
         "normalization_rule": "time_hh_mm",
+        "forward_fill": false,
         "group": 3,
         "keywords": ["pabeig", "beigs", "end"]
       },
@@ -352,6 +356,7 @@
         "enum_values": [],
         "nullable": true,
         "normalization_rule": "time_hh_mm",
+        "forward_fill": false,
         "group": 3,
         "keywords": ["uzkrausana", "sakta"]
       },
@@ -364,6 +369,7 @@
         "enum_values": [],
         "nullable": true,
         "normalization_rule": "time_hh_mm",
+        "forward_fill": false,
         "group": 2,
         "keywords": ["cnc", "sak"]
       },
@@ -376,6 +382,7 @@
         "enum_values": [],
         "nullable": true,
         "normalization_rule": "time_hh_mm",
+        "forward_fill": false,
         "group": 2,
         "keywords": ["cnc", "beidz"]
       },
@@ -388,6 +395,7 @@
         "enum_values": [],
         "nullable": true,
         "normalization_rule": "time_hh_mm",
+        "forward_fill": false,
         "group": 3,
         "keywords": ["nokrausana"]
       },
@@ -400,6 +408,7 @@
         "enum_values": [],
         "nullable": true,
         "normalization_rule": "passthrough",
+        "forward_fill": false,
         "group": 3,
         "keywords": ["simulacija"]
       },

@@ -6,8 +6,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import com.example.myapplication.AppDestinations
+import com.example.myapplication.models.PresetColumn
 import com.example.myapplication.models.ProductionRow
 import com.example.myapplication.models.RawScannedRow
+import com.example.myapplication.models.TablePreset
+import com.example.myapplication.utils.DataNormalizer
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.UUID
@@ -101,6 +104,39 @@ class MainViewModel(private val savedStateHandle: SavedStateHandle) : ViewModel(
     fun updateRawCell(row: RawScannedRow, role: String, value: String) {
         row.setCell(role, value)
         saveRawRows()
+    }
+
+    fun forwardFillColumn(startRowIndex: Int, col: PresetColumn, activePreset: TablePreset?) {
+        if (startRowIndex !in rawRowsList.indices) return
+
+        val sourceRow = rawRowsList[startRowIndex]
+        val sourceValue = sourceRow.getCell(col.role).ifBlank { sourceRow.getCell(col.sourceHeader) }
+
+        if (!DataNormalizer.isForwardFillAllowed(col)) return
+
+        var filledAny = false
+        for (i in (startRowIndex + 1) until rawRowsList.size) {
+            val targetRow = rawRowsList[i]
+            val currentTargetVal = targetRow.getCell(col.role).ifBlank { targetRow.getCell(col.sourceHeader) }
+
+            // Auto fill until next filled column cell
+            if (currentTargetVal.isNotBlank()) {
+                break
+            }
+
+            targetRow.setCell(col.role, sourceValue)
+            targetRow.setCell(col.sourceHeader, sourceValue)
+            rawRowsList[i] = targetRow.copy()
+            filledAny = true
+        }
+
+        if (filledAny || sourceValue.isNotBlank()) {
+            DataNormalizer.normalizeRows(rawRowsList, activePreset)
+            for (idx in rawRowsList.indices) {
+                rawRowsList[idx] = rawRowsList[idx].copy()
+            }
+            saveRawRows()
+        }
     }
 
     // Shared production rows list for salaries & export
